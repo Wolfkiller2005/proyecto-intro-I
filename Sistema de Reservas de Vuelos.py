@@ -1,5 +1,5 @@
 from tkinter import *
-from Variables import *
+from constants import *
 
 
 ventana_inicial.mainloop()
