@@ -138,7 +138,25 @@ def origen_destino_precio():
 
     messagebox.showinfo("Vuelo creado", f"Datos del vuelo {num_vuelo} asignados correctamente")
 
+def estado_vuelo():
     
+    if not vuelos:
+        messagebox.showerror("Error", "No hay vuelos disponibles.")
+        return
+    
+    while True:
+        num_vuelo = simpledialog.askinteger("Estado del vuelo", "Ingrese el número de vuelo:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
+        if num_vuelo is None:
+            return
+
+        if num_vuelo < 1 or num_vuelo > len(vuelos):
+            messagebox.showerror("Error", "Número de vuelo inválido.")
+           
+        else:
+            break
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 
 
@@ -147,7 +165,7 @@ ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
 
 # Definir tamaño
-ventana.geometry("175x170")
+ventana.geometry("375x375")
 ventana.resizable(False, False)
 
 
@@ -155,6 +173,7 @@ ventana.resizable(False, False)
 
 #botones
 Button(ventana, text="1. Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=25, y=25, width=125, height=50)
-Button(ventana, text="2. Origen del vuelo", command=origen_destino_precio).place(x=25, y=80, width=125, height=50)
+Button(ventana, text="2. Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=25, y=80, width=245, height=50)
+Button(ventana, text="3. ver estado del vuelo", command=estado_vuelo).place(x=25, y=135, width=125, height=50)
 
 ventana.mainloop()
