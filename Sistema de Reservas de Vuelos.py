@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import simpledialog, messagebox
+from tkinter import ttk
 
 vuelos = []          # lista global con todos los vuelos
 contador_vuelos = 1  
@@ -56,7 +57,16 @@ def Crear_nuevo_vuelo():
     matriz = [[False for _ in range(columnas)] for _ in range(filas)]
 
     # vuelo individual
-    vuelo = [f"V{contador_vuelos}", "", "", 0, matriz, 0, filas, columnas]
+    vuelo = [
+        "V1",      # ID del vuelo
+        "",        # Origen 
+        "",        # Destino
+        0,         # Precio
+        matriz,    # Matriz de asientos
+        0,         # Reservas
+        filas,     # Número de filas
+        columnas   # Número de columnas
+        ]
 
     vuelos.append(vuelo)
 
@@ -71,19 +81,10 @@ def origen_destino_precio():
         messagebox.showerror("Error", "No hay vuelos disponibles.")
         return
     
-    while True:
-        num_vuelo = simpledialog.askinteger("Asignar datos", "Número interno del vuelo:")
-
-        # Validaciones -- -- -- -- -- -- -- -- -- --
-        if num_vuelo is None:
-            return
-
-        if num_vuelo < 1 or num_vuelo > len(vuelos):
-            messagebox.showerror("Error", "Número de vuelo inválido.")
-           
-        else:
-            break
-        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    # Usar la ventana de selección para obtener el número interno
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
 
     vuelo = vuelos[num_vuelo - 1]  # La lista empieza en el indice 0
 
@@ -148,27 +149,58 @@ def origen_destino_precio():
             break
         # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+    # después de validar código, origen, destino y precio
+    # asignar los datos al vuelo seleccionado
+    vuelo[0] = codigo       
+    vuelo[1] = origen
+    vuelo[2] = destino
+    vuelo[3] = precio
+
     messagebox.showinfo("Vuelo creado", f"Datos del vuelo {num_vuelo} asignados correctamente")
+
+def seleccionar_vuelo():
+    if not vuelos:
+        messagebox.showerror("Error", "No hay vuelos disponibles.")
+        return None
+    
+    # Crear una ventana para seleccionar
+    ventana_seleccion = Toplevel()
+    ventana_seleccion.title("Seleccionar Vuelo")
+    
+    # Indicacion clara para seleccionar el número interno
+    Label(ventana_seleccion, text="Seleccione el número interno del vuelo:").pack(padx=10, pady=(10,0))
+    
+    # Crear lista de vuelos disponibles mostrando número interno y código (si existe)
+    opciones = [f"{i+1} — {vuelos[i][0]}" for i in range(len(vuelos))]
+    
+    # Crear el combobox
+    combo = ttk.Combobox(ventana_seleccion, values=opciones, state="readonly", width=25)
+    combo.set("Seleccione un vuelo")  # Valor por defecto
+    combo.pack(padx=20, pady=10)
+    
+    # Variable para almacenar la selección
+    seleccion = None
+    
+    def confirmar():
+        nonlocal seleccion
+        if combo.get() != "Seleccione un vuelo":
+            # Formato: "N — CÓDIGO", tomar la parte antes del guion
+            seleccion = int(combo.get().split('—')[0].strip())
+            ventana_seleccion.destroy()
+    
+    # Botón de confirmar
+    Button(ventana_seleccion, text="Confirmar", command=confirmar).pack(pady=(0,10))
+    
+    # Esperar hasta que se cierre la ventana
+    ventana_seleccion.wait_window()
+    
+    return seleccion
 
 def estado_vuelo():
     
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    
-    while True:
-        num_vuelo = simpledialog.askinteger("Estado del vuelo", "Ingrese el número de vuelo:")
-
-        # Validaciones -- -- -- -- -- -- -- -- -- --
-        if num_vuelo is None:
-            return
-
-        if num_vuelo < 1 or num_vuelo > len(vuelos):
-            messagebox.showerror("Error", "Número de vuelo inválido.")
-           
-        else:
-            break
-        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
     matriz = vuelo[4]
