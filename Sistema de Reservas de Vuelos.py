@@ -4,6 +4,18 @@ from tkinter import simpledialog, messagebox
 vuelos = []          # lista global con todos los vuelos
 contador_vuelos = 1  
 
+#funcion para obtener las letras de los asientos
+def obtener_letra_fila(n):
+    letras = ""
+    while True:
+        n, r = divmod(n, 26)
+        letras = chr(65 + r) + letras
+        if n == 0:
+            break
+        n -= 1
+    return letras
+
+
 def Crear_nuevo_vuelo():
 
     global contador_vuelos, vuelos
@@ -157,6 +169,51 @@ def estado_vuelo():
         else:
             break
         # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
+    matriz = vuelo[4]
+    filas, columnas = vuelo[6], vuelo[7]
+    tamaño = 12
+    margen = 28
+    margen_superior = 40
+
+    ventana_estado = Toplevel()
+    ventana_estado.title(f"Estado del vuelo {num_vuelo}")
+    canvas = Canvas(ventana_estado, width=columnas*tamaño + margen, height=filas*tamaño + margen + margen_superior)
+    canvas.pack()
+    canvas.create_text(margen + (columnas*tamaño)//2, 10, text="VUELO", font=("Arial", 9, "bold"))
+
+    for j in range(columnas):
+        canvas.create_text(margen + j*tamaño + tamaño//2, margen_superior-10, text=str(j+1), fill="black", font=("Arial", 8))
+
+    for i in range(filas):
+
+        letra = obtener_letra_fila(i)
+
+        canvas.create_text(margen-12, margen_superior + i*tamaño + tamaño//2, text=letra, fill="black", font=("Arial", 8))
+
+    #dibuja la matriz de asientos
+    for i in range(filas):
+        for j in range(columnas):
+
+            x = margen + j*tamaño
+            y = margen_superior + i*tamaño
+            color = "white" if not matriz[i][j] else "gray"
+            canvas.create_rectangle(x, y, x+tamaño, y+tamaño, fill=color, outline="black")
+
+            if matriz[i][j]:
+                canvas.create_text(x+tamaño//2, y+tamaño//2, text="X", fill="black", font=("Arial", 7, "bold"))
+    # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    #Estadisticas -- -- -- -- -- -- -- --
+    total = filas * columnas
+    ocupados = sum(seat for row in matriz for seat in row)
+    porcentaje = (ocupados / total) * 100 if total else 0
+    # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    info = f"Asientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%"
+    label = Label(ventana_estado, text=info, font=("Arial", 9))
+    label.pack(pady=10)
 
 
 
