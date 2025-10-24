@@ -251,6 +251,7 @@ def estado_vuelo():
     label.pack(pady=10)
 
 def reservar_asiento():
+
     # pedir vuelo
     num_vuelo = seleccionar_vuelo()
     if num_vuelo is None:
@@ -299,6 +300,28 @@ def reservar_asiento():
 
     Button(ventana, text="Confirmar", command=confirmar).pack(pady=(0,10))
 
+#TODO: hacer la opcion 5
+
+def estadistica_ocupacion():
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+
+    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
+    id = vuelo[0]
+    origen = vuelo[1]
+    destino = vuelo[2]
+    matriz = vuelo[4]
+    filas, columnas = vuelo[6], vuelo[7]
+
+    total = filas * columnas
+    ocupados = sum(seat for row in matriz for seat in row)
+    porcentaje = (ocupados / total) * 100 if total else 0
+
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
+
+
 
 #Ventana Principal
 ventana = Tk()
@@ -316,5 +339,7 @@ Button(ventana, text="1. Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=
 Button(ventana, text="2. Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=25, y=80, width=245, height=50)
 Button(ventana, text="3. ver estado del vuelo", command=estado_vuelo).place(x=25, y=135, width=125, height=50)
 Button(ventana, text="4. reservar asientos", command=reservar_asiento).place(x=25, y=190, width=125, height=50)
+
+Button(ventana, text="6. Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=25, y=300, width=245, height=50)
 
 ventana.mainloop()
