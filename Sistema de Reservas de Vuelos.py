@@ -25,6 +25,8 @@ def seleccionar_vuelo():
     # Crear una ventana para seleccionar
     ventana_seleccion = Toplevel()
     ventana_seleccion.title("Seleccionar Vuelo")
+    ventana_seleccion.grab_set()
+    ventana_seleccion.transient(ventana_seleccion.master)
     
     # Indicacion clara para seleccionar el número
     Label(ventana_seleccion, text="Seleccione el número del vuelo:").pack(padx=10, pady=(10,0))
@@ -215,6 +217,8 @@ def estado_vuelo():
     canvas = Canvas(ventana_estado, width=columnas*tamaño + margen, height=filas*tamaño + margen + margen_superior)
     canvas.pack()
     canvas.create_text(margen + (columnas*tamaño)//2, 10, text="VUELO", font=("Arial", 9, "bold"))
+    ventana_estado.grab_set()
+    ventana_estado.transient(ventana_estado.master)
 
     #Creación de los numeros de las columnas
     for j in range(columnas):
@@ -276,6 +280,8 @@ def reservar_asiento():
     # ventana de selección
     ventana = Toplevel()
     ventana.title(f"Seleccionar asiento - Vuelo {num_vuelo}")
+    ventana.grab_set()
+    ventana.transient(ventana.master)
     Label(ventana, text="Seleccione un asiento disponible:").pack(padx=10, pady=(10,0))
 
     # combobox con solo las etiquetas
@@ -300,7 +306,71 @@ def reservar_asiento():
 
     Button(ventana, text="Confirmar", command=confirmar).pack(pady=(0,10))
 
-#TODO: hacer la opcion 5
+def cancelar_reserva():
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+    
+    vuelo = vuelos[num_vuelo - 1] #inicia con indice 0
+
+    if vuelo[5] == 0:
+        messagebox.showerror("ERROR","el vuelo no tiene asientos reservados")
+        return
+    
+    # Lista para guardar asientos ocupados
+    ocupados = []
+    matriz = vuelo[4]
+    filas = vuelo[6]
+    columnas = vuelo[7]
+
+    # Guardar índices y etiqueta
+    for i in range(filas):
+        for j in range(columnas):
+            if matriz[i][j] == True:
+                letra = chr(65 + i)
+                numero = j + 1
+                etiqueta = f"{letra}{numero}"
+                ocupados.append((i, j, etiqueta))
+
+    ventana_reservados = Toplevel()
+    ventana_reservados.title(f"Asientos Ocupados - vuelo {num_vuelo}")
+    ventana_reservados.grab_set()
+    ventana_reservados.transient(ventana_reservados.master)
+
+    # Mostrar solo las etiquetas en el combobox
+    valores = [asiento[2] for asiento in ocupados]
+    lista = ttk.Combobox(ventana_reservados, values=valores, state="readonly")
+    lista.set("Seleccione asiento")
+    lista.pack(padx=20, pady=20)
+
+
+    def confirmar():
+        sel = lista.get()
+        if sel == "" or sel == "Seleccione asiento":
+            messagebox.showerror("Error", "Seleccione un asiento.")
+            return
+        # buscar indices del asiento seleccionado
+        for fila_idx, col_idx, etiqueta in ocupados:
+            if etiqueta == sel:
+                matriz[fila_idx][col_idx] = False  # liberar asiento
+                vuelo[5] = vuelo[5] - 1  # decrementar reservas
+                messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
+                ventana_reservados.destroy()
+                return
+    Button(ventana_reservados, text="Confirmar", command=confirmar).pack(pady=(0,10))
+
+
+    """vuelo =
+        "V1",      # ID del vuelo
+        "",        # Origen 
+        "",        # Destino
+        0,         # Precio
+        matriz,    # Matriz de asientos
+        0,         # Reservas
+        filas,     # Número de filas
+        columnas   # Número de columnas"""
+    
 
 def estadistica_ocupacion():
 
@@ -312,15 +382,28 @@ def estadistica_ocupacion():
     id = vuelo[0]
     origen = vuelo[1]
     destino = vuelo[2]
-    matriz = vuelo[4]
     filas, columnas = vuelo[6], vuelo[7]
 
     total = filas * columnas
-    ocupados = sum(seat for row in matriz for seat in row)
+    ocupados = vuelo[5]
     porcentaje = (ocupados / total) * 100 if total else 0
 
     messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
 
+def estadistica_recaudacion():
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+
+    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
+    id = vuelo[0]
+    origen = vuelo[1]
+    destino = vuelo[2]
+    precio = vuelo[3]
+    reservas = vuelo[5]
+ 
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
 
 
 #Ventana Principal
@@ -328,7 +411,7 @@ ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
 
 # Definir tamaño
-ventana.geometry("375x375")
+ventana.geometry("375x1500")
 ventana.resizable(False, False)
 
 
@@ -339,7 +422,7 @@ Button(ventana, text="1. Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=
 Button(ventana, text="2. Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=25, y=80, width=245, height=50)
 Button(ventana, text="3. ver estado del vuelo", command=estado_vuelo).place(x=25, y=135, width=125, height=50)
 Button(ventana, text="4. reservar asientos", command=reservar_asiento).place(x=25, y=190, width=125, height=50)
-
+Button(ventana, text="5. cancelar reserva", command=cancelar_reserva).place(x=25, y=245, width=125, height=50)
 Button(ventana, text="6. Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=25, y=300, width=245, height=50)
-
+Button(ventana, text="7. Ver estadistica de recaudacion", command=estadistica_recaudacion).place(x=25, y=355, width=245, height=50)
 ventana.mainloop()
