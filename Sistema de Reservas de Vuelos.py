@@ -411,7 +411,7 @@ ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
 
 # Definir tamaño
-ventana.geometry("375x1500")
+ventana.geometry("375x750")
 ventana.resizable(False, False)
 
 
@@ -425,4 +425,9 @@ Button(ventana, text="4. reservar asientos", command=reservar_asiento).place(x=2
 Button(ventana, text="5. cancelar reserva", command=cancelar_reserva).place(x=25, y=245, width=125, height=50)
 Button(ventana, text="6. Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=25, y=300, width=245, height=50)
 Button(ventana, text="7. Ver estadistica de recaudacion", command=estadistica_recaudacion).place(x=25, y=355, width=245, height=50)
+
+
+
+
+Button(ventana, text="13. Salir", command=ventana.quit).place(x=25, y=685, width=245, height=50)
 ventana.mainloop()
