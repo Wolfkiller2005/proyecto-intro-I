@@ -530,7 +530,7 @@ def Reiniciar_vuelo():
             matriz[i][j] = False
     
     vuelo[5] = 0
-    
+
     messagebox.showinfo("Reinicio", f"Reinicio del vuelo {num_vuelo} ({vuelo[0]}) realizado correctamente.")
 
 #Ventana Principal
@@ -538,7 +538,8 @@ ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
 
 # Definir tamaño
-ventana.geometry("375x750")
+ventana.update_idletasks()
+ventana.geometry("375x750+0+0")
 ventana.resizable(False, False)
 
 #botones
