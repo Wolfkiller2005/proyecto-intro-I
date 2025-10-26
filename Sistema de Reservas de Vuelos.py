@@ -28,15 +28,13 @@ def seleccionar_vuelo():
     ventana_seleccion.grab_set()
     ventana_seleccion.transient(ventana_seleccion.master)
     
-    # Indicacion clara para seleccionar el número
     Label(ventana_seleccion, text="Seleccione el número del vuelo:").pack(padx=10, pady=(10,0))
     
     # Crear lista de vuelos disponibles mostrando número
     opciones = [f"{i+1} — {vuelos[i][0]}" for i in range(len(vuelos))]
     
-    # Crear el combobox
     combo = ttk.Combobox(ventana_seleccion, values=opciones, state="readonly", width=25)
-    combo.set("Seleccione un vuelo")  # Valor por defecto
+    combo.set("Seleccione un vuelo")
     combo.pack(padx=20, pady=10)
     
     # Variable para almacenar la selección
@@ -45,7 +43,6 @@ def seleccionar_vuelo():
     def confirmar():
         nonlocal seleccion
         if combo.get() != "Seleccione un vuelo":
-            # Formato: "N — CÓDIGO", tomar la parte antes del guion
             seleccion = int(combo.get().split('—')[0].strip())
             ventana_seleccion.destroy()
     
@@ -242,7 +239,6 @@ def estado_vuelo():
 
             if matriz[i][j]:
                 canvas.create_text(x+tamaño//2, y+tamaño//2, text="X", fill="black", font=("Arial", 7, "bold"))
-    # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     #Estadisticas -- -- -- -- -- -- -- --
     total = filas * columnas
@@ -256,7 +252,6 @@ def estado_vuelo():
 
 def reservar_asiento():
 
-    # pedir vuelo
     num_vuelo = seleccionar_vuelo()
     if num_vuelo is None:
         return
@@ -277,7 +272,6 @@ def reservar_asiento():
         messagebox.showinfo("Sin asientos", "No hay asientos disponibles en este vuelo.")
         return
 
-    # ventana de selección
     ventana = Toplevel()
     ventana.title(f"Seleccionar asiento - Vuelo {num_vuelo}")
     ventana.grab_set()
@@ -312,7 +306,7 @@ def cancelar_reserva():
     if num_vuelo is None:
         return
     
-    vuelo = vuelos[num_vuelo - 1] #inicia con indice 0
+    vuelo = vuelos[num_vuelo - 1]
 
     if vuelo[5] == 0:
         messagebox.showerror("ERROR","el vuelo no tiene asientos reservados")
@@ -344,7 +338,6 @@ def cancelar_reserva():
     lista.set("Seleccione asiento")
     lista.pack(padx=20, pady=20)
 
-
     def confirmar():
         sel = lista.get()
         if sel == "" or sel == "Seleccione asiento":
@@ -358,19 +351,7 @@ def cancelar_reserva():
                 messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
                 ventana_reservados.destroy()
                 return
-    Button(ventana_reservados, text="Confirmar", command=confirmar).pack(pady=(0,10))
-
-
-    """vuelo =
-        "V1",      # ID del vuelo
-        "",        # Origen 
-        "",        # Destino
-        0,         # Precio
-        matriz,    # Matriz de asientos
-        0,         # Reservas
-        filas,     # Número de filas
-        columnas   # Número de columnas"""
-    
+    Button(ventana_reservados, text="Confirmar", command=confirmar).pack(pady=(0,10))    
 
 def estadistica_ocupacion():
 
@@ -378,7 +359,7 @@ def estadistica_ocupacion():
     if num_vuelo is None:
         return
 
-    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
+    vuelo = vuelos[num_vuelo - 1]
     id = vuelo[0]
     origen = vuelo[1]
     destino = vuelo[2]
@@ -396,7 +377,7 @@ def estadistica_recaudacion():
     if num_vuelo is None:
         return
 
-    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
+    vuelo = vuelos[num_vuelo - 1]
     id = vuelo[0]
     origen = vuelo[1]
     destino = vuelo[2]
@@ -405,6 +386,131 @@ def estadistica_recaudacion():
  
     messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
 
+def obtener_vuelos_por_destino(destino):
+    if destino is None:
+        return []
+    destino = destino.strip().lower()
+    resultados = []
+    for i, vuelo in enumerate(vuelos, 1):
+        if isinstance(vuelo, (list, tuple)) and len(vuelo) > 2:
+            if isinstance(vuelo[2], str) and vuelo[2].strip().lower() == destino:
+                resultados.append((i, vuelo))
+    return resultados
+
+
+def buscar_vuelos_por_destino_ui():
+    # Crear ventana para mostrar destinos y búsqueda
+    ventana_busqueda = Toplevel()
+    ventana_busqueda.title("Búsqueda por destino")
+    ventana_busqueda.grab_set()
+    ventana_busqueda.transient(ventana_busqueda.master)
+
+    # Frame izquierdo para destinos disponibles
+    frame_destinos = Frame(ventana_busqueda)
+    frame_destinos.pack(side=LEFT, padx=10, pady=10)
+    
+    Label(frame_destinos, text="Destinos disponibles:", font=("Arial", 9, "bold")).pack()
+    
+    # Obtener destinos únicos
+    destinos = set()
+    for vuelo in vuelos:
+        if vuelo[2]:  # Si el destino no está vacío
+            destinos.add(vuelo[2])
+    
+    # Mostrar destinos en listbox
+    listbox_destinos = Listbox(frame_destinos, width=20, height=10)
+    for destino in sorted(destinos):
+        listbox_destinos.insert(END, destino)
+    listbox_destinos.pack(pady=5)
+
+    # Frame derecho para búsqueda
+    frame_busqueda = Frame(ventana_busqueda)
+    frame_busqueda.pack(side=LEFT, padx=10, pady=10)
+    
+    Label(frame_busqueda, text="Ingrese el destino:").pack(pady=5)
+    entrada = Entry(frame_busqueda)
+    entrada.pack(pady=5)
+    
+    def buscar():
+        destino = entrada.get().strip()
+        if not destino:
+            messagebox.showerror("Error", "Ingrese un destino")
+            return
+            
+        resultados = obtener_vuelos_por_destino(destino)
+        if not resultados:
+            messagebox.showinfo("Resultados", f"No hay vuelos con destino: {destino}")
+            return
+
+        # Mostrar resultados en nueva ventana
+        mostrar_resultados(destino, resultados)
+    
+    Button(frame_busqueda, text="Buscar", command=buscar).pack(pady=5)
+    Button(frame_busqueda, text="Cerrar", command=ventana_busqueda.destroy).pack(pady=5)
+
+def mostrar_resultados(destino, resultados):
+    ventana = Toplevel()
+    ventana.title(f"Vuelos a {destino}")
+    ventana.grab_set()
+    ventana.transient(ventana.master)
+
+    listbox = Listbox(ventana, width=80)
+    for num, vuelo in resultados:
+        codigo = vuelo[0]
+        origen = vuelo[1]
+        dest = vuelo[2]
+        precio = vuelo[3]
+        matriz = vuelo[4]
+        disponibles = sum(1 for fila in matriz for asiento in fila if not asiento)
+        listbox.insert(END, f"{num} — {codigo} | {origen} → {dest} | ₡{precio} | Asientos disponibles: {disponibles}")
+    listbox.pack(padx=10, pady=10)
+
+    Button(ventana, text="Cerrar", command=ventana.destroy).pack(pady=(0,10))
+
+def vuelos_disponibles():
+    if not vuelos:
+        messagebox.showinfo("Vuelos Disponibles", "No hay vuelos registrados.")
+        return
+    
+    ventana_vuelos = Toplevel()
+    ventana_vuelos.title("Vuelos Disponibles")
+    ventana_vuelos.grab_set()
+    ventana_vuelos.transient(ventana_vuelos.master)
+    
+    # Crear (tabla) para mostrar los vuelos
+    tabla = ttk.Treeview(ventana_vuelos, columns=("Número", "Código", "Origen", "Destino", "Precio"))
+    
+    # Configurar columnas
+    tabla.heading("Número", text="Número")
+    tabla.heading("Código", text="Código")
+    tabla.heading("Origen", text="Origen")
+    tabla.heading("Destino", text="Destino")
+    tabla.heading("Precio", text="Precio")
+    
+    # Ocultar la primera columna vacía
+    tabla.column("#0", width=0, stretch=NO)
+    
+    # Ajustar ancho de columnas
+    tabla.column("Número", width=60)
+    tabla.column("Código", width=100)
+    tabla.column("Origen", width=100)
+    tabla.column("Destino", width=100)
+    tabla.column("Precio", width=100)
+    
+    # Insertar datos
+    for i, vuelo in enumerate(vuelos, 1):
+        tabla.insert("", END, values=(
+            i,              # Número de vuelo
+            vuelo[0],      # Código
+            vuelo[1],      # Origen
+            vuelo[2],      # Destino
+            f"₡{vuelo[3]}" # Precio
+        ))
+    
+    tabla.pack(padx=10, pady=10)
+    
+    # Botón para cerrar
+    Button(ventana_vuelos, text="Cerrar", command=ventana_vuelos.destroy).pack(pady=10)
 
 #Ventana Principal
 ventana = Tk()
@@ -414,9 +520,6 @@ ventana.title("Sistema de reserva de vuelos")
 ventana.geometry("375x750")
 ventana.resizable(False, False)
 
-
-
-
 #botones
 Button(ventana, text="1. Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=25, y=25, width=125, height=50)
 Button(ventana, text="2. Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=25, y=80, width=245, height=50)
@@ -425,7 +528,8 @@ Button(ventana, text="4. reservar asientos", command=reservar_asiento).place(x=2
 Button(ventana, text="5. cancelar reserva", command=cancelar_reserva).place(x=25, y=245, width=125, height=50)
 Button(ventana, text="6. Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=25, y=300, width=245, height=50)
 Button(ventana, text="7. Ver estadistica de recaudacion", command=estadistica_recaudacion).place(x=25, y=355, width=245, height=50)
-
+Button(ventana, text="8. Buscar vuelo por destino", command=buscar_vuelos_por_destino_ui).place(x=25, y=410, width=245, height=50)
+Button(ventana, text="9. Vuelos disponibles", command=vuelos_disponibles).place(x=25, y=465, width=125, height=50)
 
 
 
