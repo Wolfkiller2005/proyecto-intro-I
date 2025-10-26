@@ -186,8 +186,6 @@ def origen_destino_precio():
             break
         # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    # después de validar código, origen, destino y precio
-    # asignar los datos al vuelo seleccionado
     vuelo[0] = codigo       
     vuelo[1] = origen
     vuelo[2] = destino
@@ -343,6 +341,7 @@ def cancelar_reserva():
         if sel == "" or sel == "Seleccione asiento":
             messagebox.showerror("Error", "Seleccione un asiento.")
             return
+        
         # buscar indices del asiento seleccionado
         for fila_idx, col_idx, etiqueta in ocupados:
             if etiqueta == sel:
@@ -351,6 +350,7 @@ def cancelar_reserva():
                 messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
                 ventana_reservados.destroy()
                 return
+            
     Button(ventana_reservados, text="Confirmar", command=confirmar).pack(pady=(0,10))    
 
 def estadistica_ocupacion():
@@ -512,6 +512,27 @@ def vuelos_disponibles():
     # Botón para cerrar
     Button(ventana_vuelos, text="Cerrar", command=ventana_vuelos.destroy).pack(pady=10)
 
+
+def Reiniciar_vuelo():
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+
+    # Pedir confirmación
+    if not messagebox.askyesno("Confirmar reinicio", f"¿Desea reiniciar el vuelo {num_vuelo} ({vuelo[0]})?"):
+        return
+    
+    vuelo = vuelos[num_vuelo - 1]
+    matriz = vuelo[4]
+    for i in range(len(matriz)):
+        for j in range(len(matriz[i])):
+            matriz[i][j] = False
+    
+    vuelo[5] = 0
+    
+    messagebox.showinfo("Reinicio", f"Reinicio del vuelo {num_vuelo} ({vuelo[0]}) realizado correctamente.")
+
 #Ventana Principal
 ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
@@ -532,6 +553,6 @@ Button(ventana, text="8. Buscar vuelo por destino", command=buscar_vuelos_por_de
 Button(ventana, text="9. Vuelos disponibles", command=vuelos_disponibles).place(x=25, y=465, width=125, height=50)
 
 
-
+Button(ventana, text="12. Reiniciar vuelo", command=Reiniciar_vuelo).place(x=25, y=630, width=125, height=50)
 Button(ventana, text="13. Salir", command=ventana.quit).place(x=25, y=685, width=245, height=50)
 ventana.mainloop()
