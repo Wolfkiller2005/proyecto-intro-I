@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import simpledialog, messagebox
 from tkinter import ttk
 import random
-from PIL import *
+from PIL import Image, ImageTk
 
 vuelos = []          # lista global con todos los vuelos
 contador_vuelos = 1  
@@ -688,45 +688,121 @@ ventana.geometry("800x550+0+0")
 ventana.resizable(False, False)
 ventana.update_idletasks()
 
-style = ttk.Style()
-imagen_fondo = PhotoImage(file="\proyecto-intro-I\cielo.jpg")
 
-fondo_label = Label(ventana, image=imagen_fondo)
+ruta_imagen = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
+
+
+imagen = Image.open(ruta_imagen)
+imagen = imagen.resize((800, 550), Image.LANCZOS)
+imagen_fondo = ImageTk.PhotoImage(imagen)
+
+ventana.imagen_fondo = imagen_fondo
+
+# Colocar fondo
+fondo_label = Label(ventana, image=ventana.imagen_fondo)
 fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-#Fila 0
-Button1 = Button(ventana, text="Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=25, y=25, width=245, height=50)
+# Estilo de los botones
+style = ttk.Style()
+style.theme_use("clam")  # permite personalización de colores
 
-Button2 = Button(ventana, text="Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=275, y=25, width=245, height=50)
+# Estilo general para todos los botones del menú
+style.configure(
+    "Menu.TButton",
+    font=("Segoe UI", 8, "bold"),
+    background="#3C719D", 
+    foreground="white",
+    padding=8,
+    borderwidth=0
+)
 
-Button3 = Button(ventana, text="Ver estado del vuelo", command=estado_vuelo).place(x=525, y=25, width=245, height=50)
+# Efectos de hover y click
+style.map(
+    "Menu.TButton",
+    background=[("active", "#005A9E")],
+    foreground=[("active", "white")]
+)
 
-#Fila 1
-Button4 = Button(ventana, text="Reservar asientos", command=reservar_asiento).place(x=25, y=80, width=245, height=50)
+# Estilo especial para el botón "Salir"
+style.configure(
+    "Salir.TButton",
+    font=("Segoe UI", 11, "bold"),
+    background="#D9534F",   # rojo
+    foreground="white",
+    padding=8,
+    borderwidth=0
+)
+style.map(
+    "Salir.TButton",
+    background=[("active", "#C9302C")]
+)
 
-Button5 = Button(ventana, text="Cancelar reserva", command=cancelar_reserva).place(x=275, y=80, width=245, height=50)
+# -----------------------------------------------------------------------------------------
+# Fila 0
+# -----------------------------------------------------------------------------------------
+Button1 = ttk.Button(ventana, text="Crear nuevo vuelo", command=Crear_nuevo_vuelo, style="Menu.TButton")
+Button1.place(x=25, y=25, width=245, height=50)
+Button1.configure(cursor="hand2")
 
-Button6 = Button(ventana, text="Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=525, y=80, width=245, height=50)
-
-#Fila 2
-Button7 = Button(ventana, text="Ver estadistica de recaudacion", command=estadistica_recaudacion).place(x=25, y=135, width=245, height=50)
-
-Button8 = Button(ventana, text="Buscar vuelo por destino", command=buscar_vuelos_por_destino_ui).place(x=275, y=135, width=245, height=50)
-
-Button9 = Button(ventana, text="Vuelos disponibles", command=vuelos_disponibles).place(x=525, y=135, width=245, height=50)
-
-#Fila 3
-Button10 = Button(ventana, text="Reservar varios asientos consecutivos", command=Reservar_varios_asientos_consecutivos).place(x=25, y=190, width=245, height=50)
-
-Button11 = Button(ventana, text="Simular venta masiva", command=Simular_venta_masiva).place(x=275, y=190, width=245, height=50)
-
-Button12 = Button(ventana, text="Reiniciar vuelo", command=Reiniciar_vuelo).place(x=525, y=190, width=245, height=50)
-
-#Fila 4(centro)
-Button13 = Button(ventana, text="Salir", command=ventana.quit).place(x=275, y=245, width=245, height=50)
-
-botones =[Button1,Button2,Button3,Button4,Button5,Button6 ,Button7,Button8,Button9,Button10,Button11,Button12,Button13]
+Button2 = ttk.Button(ventana, text="Asignar origen/destino y precio al vuelo", command=origen_destino_precio, style="Menu.TButton")
+Button2.place(x=275, y=25, width=245, height=50)
+Button2.configure(cursor="hand2")
 
 
+Button3 = ttk.Button(ventana, text="Ver estado del vuelo", command=estado_vuelo, style="Menu.TButton")
+Button3.place(x=525, y=25, width=245, height=50)
+Button3.configure(cursor="hand2")
+
+# -----------------------------------------------------------------------------------------
+# Fila 1
+# -----------------------------------------------------------------------------------------
+Button4 = ttk.Button(ventana, text="Reservar asientos", command=reservar_asiento, style="Menu.TButton")
+Button4.place(x=25, y=80, width=245, height=50)
+Button4.configure(cursor="hand2")
+
+Button5 = ttk.Button(ventana, text="Cancelar reserva", command=cancelar_reserva, style="Menu.TButton")
+Button5.place(x=275, y=80, width=245, height=50)
+Button5.configure(cursor="hand2")
+
+Button6 = ttk.Button(ventana, text="Ver estadistica de ocupacion", command=estadistica_ocupacion, style="Menu.TButton")
+Button6.place(x=525, y=80, width=245, height=50)
+Button6.configure(cursor="hand2")
+
+# -----------------------------------------------------------------------------------------
+# Fila 2
+# -----------------------------------------------------------------------------------------
+Button7 = ttk.Button(ventana, text="Ver estadistica de recaudacion", command=estadistica_recaudacion, style="Menu.TButton")
+Button7.place(x=25, y=135, width=245, height=50)
+Button7.configure(cursor="hand2")
+
+Button8 = ttk.Button(ventana, text="Buscar vuelo por destino", command=buscar_vuelos_por_destino_ui, style="Menu.TButton")
+Button8.place(x=275, y=135, width=245, height=50)
+Button8.configure(cursor="hand2")
+
+Button9 = ttk.Button(ventana, text="Vuelos disponibles", command=vuelos_disponibles, style="Menu.TButton")
+Button9.place(x=525, y=135, width=245, height=50)
+Button9.configure(cursor="hand2")
+
+# -----------------------------------------------------------------------------------------
+# Fila 3
+# -----------------------------------------------------------------------------------------
+Button10 = ttk.Button(ventana, text="Reservar varios asientos consecutivos", command=Reservar_varios_asientos_consecutivos, style="Menu.TButton")
+Button10.place(x=25, y=190, width=245, height=50)
+Button10.configure(cursor="hand2")
+
+Button11 = ttk.Button(ventana, text="Simular venta masiva", command=Simular_venta_masiva, style="Menu.TButton")
+Button11.place(x=275, y=190, width=245, height=50)
+Button11.configure(cursor="hand2")
+
+Button12 = ttk.Button(ventana, text="Reiniciar vuelo", command=Reiniciar_vuelo, style="Menu.TButton")
+Button12.place(x=525, y=190, width=245, height=50)
+Button12.configure(cursor="hand2")
+
+# -----------------------------------------------------------------------------------------
+# Fila 4 (centro)
+# -----------------------------------------------------------------------------------------
+Button13 = ttk.Button(ventana, text="Salir", command=ventana.quit, style="Salir.TButton")
+Button13.place(x=275, y=245, width=245, height=50)
+Button13.configure(cursor="hand2")
 
 ventana.mainloop()
