@@ -2,27 +2,13 @@ from tkinter import *
 from tkinter import simpledialog, messagebox
 from tkinter import ttk
 import random
-import re
+from PIL import *
 
-# ---------------------------
-# Configuración y estado
-# ---------------------------
 vuelos = []          # lista global con todos los vuelos
-contador_vuelos = 1
+contador_vuelos = 1  
 
-# UI / estilo global
-DEFAULT_FONT = ("Segoe UI", 10)
-SEAT_FREE_COLOR = "#d4fddf"
-SEAT_OCCUPIED_COLOR = "#ffd6d6"
-SEAT_OUTLINE = "#333333"
-CANVAS_BG = "#ffffff"
-SEAT_SIZE_BASE = 28
-
-# ---------------------------
-# Utilidades
-# ---------------------------
+#funcion para obtener las letras de los asientos
 def obtener_letra_fila(n):
-    # n es índice 0-based -> devuelve "A", "B", ..., "Z", "AA", ...
     letras = ""
     while True:
         n, r = divmod(n, 26)
@@ -32,216 +18,254 @@ def obtener_letra_fila(n):
         n -= 1
     return letras
 
-def centrar_ventana(ventana, ww, wh):
-    ventana.update_idletasks()
-    sw = ventana.winfo_screenwidth()
-    sh = ventana.winfo_screenheight()
-    x = (sw - ww) // 2
-    y = (sh - wh) // 2
-    ventana.geometry(f"{ww}x{wh}+{x}+{y}")
-
-# ---------------------------
-# Selección modal de vuelo
-# ---------------------------
+# Funcion para seleccionar el vuelo sin tener que escribirlo
 def seleccionar_vuelo():
     if not vuelos:
         messagebox.showerror("Error", "No hay vuelos disponibles.")
         return None
-
-    ventana = Toplevel()
-    ventana.title("Seleccionar Vuelo")
-    ventana.grab_set()
-    ventana.transient(root)
-
-    Label(ventana, text="Seleccione el número interno del vuelo:").pack(padx=12, pady=(10,4))
-
-    opciones = [f"{i+1} — {vuelos[i][0] or 'sin código'}" for i in range(len(vuelos))]
-    combo = ttk.Combobox(ventana, values=opciones, state="readonly", width=30)
+    
+    # Crear una ventana para seleccionar
+    ventana_seleccion = Toplevel()
+    ventana_seleccion.title("Seleccionar Vuelo")
+    ventana_seleccion.grab_set()
+    ventana_seleccion.transient(ventana_seleccion.master)
+    
+    Label(ventana_seleccion, text="Seleccione el número del vuelo:").pack(padx=10, pady=(10,0))
+    
+    # Crear lista de vuelos disponibles mostrando número
+    opciones = [f"{i+1} — {vuelos[i][0]}" for i in range(len(vuelos))]
+    
+    combo = ttk.Combobox(ventana_seleccion, values=opciones, state="readonly", width=25)
     combo.set("Seleccione un vuelo")
-    combo.pack(padx=12, pady=(0,12))
-
-    seleccion = {"num": None}
-
+    combo.pack(padx=20, pady=10)
+    
+    # Variable para almacenar la selección
+    seleccion = None
+    
     def confirmar():
+        nonlocal seleccion
         val = combo.get()
-        if not val or val.startswith("Seleccione"):
-            messagebox.showerror("Error", "Seleccione un vuelo.")
-            return
-        m = re.match(r'\d+', val.strip())
-        if not m:
-            messagebox.showerror("Error", "Selección inválida.")
-            return
-        seleccion["num"] = int(m.group())
-        ventana.destroy()
+        if val and val != "Seleccione un vuelo":
+            try:
+                seleccion = int(val.split()[0])
+            except Exception:
+                #extraer dígitos al inicio por si hay espacios o caracteres raros
+                import re
+                m = re.match(r'\d+', val.strip())
+                if m:
+                    seleccion = int(m.group())
+                else:
+                    seleccion = None
+            ventana_seleccion.destroy()
+    
+    # Botón de confirmar
+    Button(ventana_seleccion, text="Confirmar", command=confirmar).pack(pady=(0,10))
+    
+    # Esperar hasta que se cierre la ventana
+    ventana_seleccion.wait_window()
+    
+    return seleccion
 
-    Button(ventana, text="Confirmar", command=confirmar).pack(pady=(0,10))
-    ventana.wait_window()
-    return seleccion["num"]
-
-# ---------------------------
-# Crear vuelo
-# ---------------------------
 def Crear_nuevo_vuelo():
-    global contador_vuelos
+
+    global contador_vuelos, vuelos
+
     while True:
-        filas = simpledialog.askinteger("Crear vuelo", "Cantidad de filas (1-50):")
+        filas = simpledialog.askinteger("Crear vuelo", "Cantidad de filas:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
         if filas is None:
             return
-        if 1 <= filas <= 50:
+
+        if filas >  50:
+            messagebox.showerror("Error","Numero de filas invalidas, no puden pasar de 50")
+            
+        else:
             break
-        messagebox.showerror("Error", "Número de filas inválido (1-50).")
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     while True:
-        columnas = simpledialog.askinteger("Crear vuelo", "Cantidad de columnas (1-20):")
+
+        columnas = simpledialog.askinteger("Crear vuelo", "Cantidad de columnas:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
         if columnas is None:
             return
-        if 1 <= columnas <= 20:
+        elif columnas >  20:
+            messagebox.showerror("Error","Numero de columnas invalidas, no puden pasar de 20")
+        elif filas >= 1 and columnas >= 1 and filas <= 50 and columnas <= 20:
             break
-        messagebox.showerror("Error", "Número de columnas inválido (1-20).")
+        else:
+            messagebox.showerror("Error", "Datos inválidos.")
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+    # matriz de asientos (False = libre, True = reservado)
     matriz = [[False for _ in range(columnas)] for _ in range(filas)]
-    vuelo = [
-        f"V{contador_vuelos}",  # código (por defecto)
-        "",  # origen
-        "",  # destino
-        0,   # precio
-        matriz,
-        0,   # reservas
-        filas,
-        columnas
-    ]
-    vuelos.append(vuelo)
-    contador_vuelos += 1
-    messagebox.showinfo("Vuelo creado", "Vuelo creado exitosamente.")
 
-# ---------------------------
-# Asignar origen/destino/precio
-# ---------------------------
+    # vuelo individual
+    vuelo = [
+        f"V{contador_vuelos}",      # ID del vuelo - 0
+        "",        # Origen - 1
+        "",        # Destino - 2
+        0,         # Precio - 3
+        matriz,    # Matriz de asientos - 4
+        0,         # Reservas - 5
+        filas,     # Número de filas - 6
+        columnas   # Número de columnas -7
+        ]
+
+    vuelos.append(vuelo)
+
+    messagebox.showinfo("Vuelo creado", f"¡Vuelo {contador_vuelos} creado exitosamente!")
+    contador_vuelos += 1
+
 def origen_destino_precio():
+
     if not vuelos:
         messagebox.showerror("Error", "No hay vuelos disponibles.")
         return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
-
-    codigo = simpledialog.askstring("Código", "Ingrese el código del vuelo (ej. CM123):")
-    if codigo is None:
-        return
-    if codigo.strip() == "":
-        messagebox.showerror("Error", "Código no válido.")
+    
+    # Usar la ventana de selección para obtener el número interno
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
 
-    origen = simpledialog.askstring("Origen", "Ingrese el origen:")
-    if origen is None:
-        return
-    if not all(palabra.isalpha() for palabra in origen.split()):
-        messagebox.showerror("Error", "Origen inválido.")
-        return
+    vuelo = vuelos[num_vuelo - 1]  # La lista empieza en el indice 0
 
-    destino = simpledialog.askstring("Destino", "Ingrese el destino:")
-    if destino is None:
-        return
-    if not all(palabra.isalpha() for palabra in destino.split()):
-        messagebox.showerror("Error", "Destino inválido.")
-        return
+    while True:
 
-    precio = simpledialog.askinteger("Precio", "Ingrese el precio del boleto (entero):")
-    if precio is None:
-        return
-    if precio < 1:
-        messagebox.showerror("Error", "Precio inválido.")
-        return
+        codigo = simpledialog.askstring("Código", "Ingrese el código del vuelo (ej. CM123):")
 
-    vuelo[0] = codigo
+        # Validaciones -- -- -- -- -- -- -- -- -- --
+        if codigo is None:
+            return
+        
+        if codigo.strip() != "":
+            break
+
+        else:
+            messagebox.showerror("Error", "El código no puede estar vacío.")
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    while True:
+
+        origen = simpledialog.askstring("Origen", "Ingrese el origen:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
+        if origen is None:
+            return
+
+        # Validar que solo tenga letras y espacios
+        if not all(palabra.isalpha() for palabra in origen.split()):
+            messagebox.showerror("Error", "El origen solo debe contener letras y espacios.")
+            
+        else:
+            break
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    while True:
+
+        destino = simpledialog.askstring("Destino", "Ingrese el destino:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
+        if destino is None:
+            return
+
+        if not all(palabra.isalpha() for palabra in destino.split()):
+            messagebox.showerror("Error", "El destino solo debe contener letras y espacios.")
+        
+        else:
+             break
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    while True:
+
+        precio = simpledialog.askinteger("Precio", "Ingrese el precio del boleto:")
+
+        # Validaciones -- -- -- -- -- -- -- -- -- --
+        if precio is None:
+            return
+        
+        if precio < 1:
+            messagebox.showerror("Error","El precio no puede ser 0 o menor a 0")
+
+        else:
+            break
+        # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    vuelo[0] = codigo       
     vuelo[1] = origen
     vuelo[2] = destino
     vuelo[3] = precio
-    messagebox.showinfo("Datos asignados", f"Datos del vuelo {num} asignados correctamente.")
 
-# ---------------------------
-# Estado del vuelo (canvas)
-# ---------------------------
+    messagebox.showinfo("Vuelo creado", f"Datos del vuelo {num_vuelo} asignados correctamente")
+
+
 def estado_vuelo():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+    
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
+
+    vuelo = vuelos[num_vuelo - 1]  #inicia con indice 0
     matriz = vuelo[4]
     filas, columnas = vuelo[6], vuelo[7]
-
-    tamaño = max(12, min(SEAT_SIZE_BASE, 800 // max(1, columnas)))
+    tamaño = 12
     margen = 28
-    margen_superior = 48
-    total_w = columnas * tamaño + margen * 2
-    total_h = filas * tamaño + margen * 2 + margen_superior
+    margen_superior = 40
 
-    ventana = Toplevel()
-    ventana.title(f"Estado del vuelo {num} — {vuelo[0]}")
-    ventana.grab_set()
-    ventana.transient(root)
+    ventana_estado = Toplevel()
+    ventana_estado.title(f"Estado del vuelo {num_vuelo}")
+    canvas = Canvas(ventana_estado, width=columnas*tamaño + margen, height=filas*tamaño + margen + margen_superior)
+    canvas.pack()
+    canvas.create_text(margen + (columnas*tamaño)//2, 10, text="VUELO", font=("Arial", 9, "bold"))
+    ventana_estado.grab_set()
+    ventana_estado.transient(ventana_estado.master)
 
-    frame = Frame(ventana)
-    frame.pack(fill=BOTH, expand=True)
-
-    canvas = Canvas(frame, width=min(total_w, 900), height=min(total_h, 600), bg=CANVAS_BG, highlightthickness=0)
-    h_scroll = Scrollbar(frame, orient=HORIZONTAL, command=canvas.xview)
-    v_scroll = Scrollbar(frame, orient=VERTICAL, command=canvas.yview)
-    canvas.configure(xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set)
-    v_scroll.pack(side=RIGHT, fill=Y)
-    h_scroll.pack(side=BOTTOM, fill=X)
-    canvas.pack(side=LEFT, fill=BOTH, expand=True)
-
-    start_x = margen
-    start_y = margen_superior
-
-    canvas.create_text(start_x + (columnas * tamaño)//2, 16, text=f"VUELO {vuelo[0]}", font=(DEFAULT_FONT[0], 11, "bold"))
-
+    #Creación de los numeros de las columnas
     for j in range(columnas):
-        x = start_x + j * tamaño + tamaño // 2
-        canvas.create_text(x, start_y - 14, text=str(j+1), fill="black", font=(DEFAULT_FONT[0], 9))
+        canvas.create_text(margen + j*tamaño + tamaño//2, margen_superior-10, text=str(j+1), fill="black", font=("Arial", 8))
 
+    #Creación de las letras de las filas
     for i in range(filas):
-        y = start_y + i * tamaño + tamaño // 2
-        letra = obtener_letra_fila(i)
-        canvas.create_text(start_x - 12, y, text=letra, fill="black", font=(DEFAULT_FONT[0], 9))
 
+        letra = obtener_letra_fila(i)
+
+        canvas.create_text(margen-12, margen_superior + i*tamaño + tamaño//2, text=letra, fill="black", font=("Arial", 8))
+
+    #Dibuja la matriz de asientos
     for i in range(filas):
         for j in range(columnas):
-            x = start_x + j * tamaño
-            y = start_y + i * tamaño
-            color = SEAT_FREE_COLOR if not matriz[i][j] else SEAT_OCCUPIED_COLOR
-            canvas.create_rectangle(x+1, y+1, x + tamaño - 2, y + tamaño - 2, fill=color, outline=SEAT_OUTLINE)
+
+            x = margen + j*tamaño
+            y = margen_superior + i*tamaño
+            color = "white" if not matriz[i][j] else "gray"
+            canvas.create_rectangle(x, y, x+tamaño, y+tamaño, fill=color, outline="black")
+
             if matriz[i][j]:
-                canvas.create_text(x + tamaño//2, y + tamaño//2, text="X", fill="#200", font=(DEFAULT_FONT[0], max(8, tamaño//3), "bold"))
+                canvas.create_text(x+tamaño//2, y+tamaño//2, text="X", fill="black", font=("Arial", 7, "bold"))
 
+    #Estadisticas -- -- -- -- -- -- -- --
     total = filas * columnas
-    ocupados = sum(1 for row in matriz for seat in row if seat)
+    ocupados = sum(seat for row in matriz for seat in row)
     porcentaje = (ocupados / total) * 100 if total else 0
-    info_text = f"Asientos: {total}    Ocupados: {ocupados}    % Ocupación: {porcentaje:.1f}%"
-    canvas.create_text(start_x + (columnas * tamaño)//2, start_y + filas * tamaño + 18, text=info_text, font=(DEFAULT_FONT[0], 10))
+    # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    canvas.update_idletasks()
-    canvas.config(scrollregion=canvas.bbox("all"))
+    info = f"Asientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%"
+    label = Label(ventana_estado, text=info, font=("Arial", 9))
+    label.pack(pady=10)
 
-# ---------------------------
-# Reservar asiento individual
-# ---------------------------
 def reservar_asiento():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
+
+    vuelo = vuelos[num_vuelo - 1]
     matriz = vuelo[4]
     filas, columnas = vuelo[6], vuelo[7]
 
+    # construir lista de asientos libres con etiqueta "A1", "B3", ...
     asientos_libres = []
     for i in range(filas):
         for j in range(columnas):
@@ -254,13 +278,14 @@ def reservar_asiento():
         return
 
     ventana = Toplevel()
-    ventana.title(f"Seleccionar asiento - Vuelo {num}")
+    ventana.title(f"Seleccionar asiento - Vuelo {num_vuelo}")
     ventana.grab_set()
-    ventana.transient(root)
+    ventana.transient(ventana.master)
     Label(ventana, text="Seleccione un asiento disponible:").pack(padx=10, pady=(10,0))
 
+    # combobox con solo las etiquetas
     valores = [a[2] for a in asientos_libres]
-    combo = ttk.Combobox(ventana, values=valores, state="readonly", width=12)
+    combo = ttk.Combobox(ventana, values=valores, state="readonly", width=10)
     combo.set("Seleccione")
     combo.pack(padx=10, pady=10)
 
@@ -269,184 +294,237 @@ def reservar_asiento():
         if sel == "" or sel == "Seleccione":
             messagebox.showerror("Error", "Seleccione un asiento.")
             return
+        # buscar indices del asiento seleccionado
         for fila_idx, col_idx, etiqueta in asientos_libres:
             if etiqueta == sel:
-                matriz[fila_idx][col_idx] = True
-                vuelo[5] += 1
+                matriz[fila_idx][col_idx] = True           # marcar reservado
+                vuelo[5] = vuelo[5] + 1                    # incrementar contador reservas (índice 5)
                 messagebox.showinfo("Reservado", f"Asiento {sel} reservado correctamente.")
                 ventana.destroy()
                 return
 
     Button(ventana, text="Confirmar", command=confirmar).pack(pady=(0,10))
 
-# ---------------------------
-# Cancelar reserva
-# ---------------------------
 def cancelar_reserva():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
-        return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
-    matriz = vuelo[4]
-    filas, columnas = vuelo[6], vuelo[7]
-    if vuelo[5] == 0:
-        messagebox.showerror("ERROR","El vuelo no tiene asientos reservados")
-        return
 
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+    
+    vuelo = vuelos[num_vuelo - 1]
+
+    if vuelo[5] == 0:
+        messagebox.showerror("ERROR","el vuelo no tiene asientos reservados")
+        return
+    
+    # Lista para guardar asientos ocupados
     ocupados = []
+    matriz = vuelo[4]
+    filas = vuelo[6]
+    columnas = vuelo[7]
+
+    # Guardar índices y etiqueta
     for i in range(filas):
         for j in range(columnas):
-            if matriz[i][j]:
-                etiqueta = f"{obtener_letra_fila(i)}{j+1}"
+            if matriz[i][j] == True:
+                letra = obtener_letra_fila(i)
+                numero = j + 1
+                etiqueta = f"{letra}{numero}"
                 ocupados.append((i, j, etiqueta))
 
-    ventana = Toplevel()
-    ventana.title(f"Asientos Ocupados - vuelo {num}")
-    ventana.grab_set()
-    ventana.transient(root)
+    ventana_reservados = Toplevel()
+    ventana_reservados.title(f"Asientos Ocupados - vuelo {num_vuelo}")
+    ventana_reservados.grab_set()
+    ventana_reservados.transient(ventana_reservados.master)
 
-    valores = [a[2] for a in ocupados]
-    combo = ttk.Combobox(ventana, values=valores, state="readonly", width=12)
-    combo.set("Seleccione asiento")
-    combo.pack(padx=12, pady=12)
+    # Mostrar solo las etiquetas en el combobox
+    valores = [asiento[2] for asiento in ocupados]
+    lista = ttk.Combobox(ventana_reservados, values=valores, state="readonly")
+    lista.set("Seleccione asiento")
+    lista.pack(padx=20, pady=20)
 
     def confirmar():
-        sel = combo.get()
+        sel = lista.get()
         if sel == "" or sel == "Seleccione asiento":
             messagebox.showerror("Error", "Seleccione un asiento.")
             return
+        
+        # buscar indices del asiento seleccionado
         for fila_idx, col_idx, etiqueta in ocupados:
             if etiqueta == sel:
-                matriz[fila_idx][col_idx] = False
-                vuelo[5] -= 1
-                messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada.")
-                ventana.destroy()
+                matriz[fila_idx][col_idx] = False  # liberar asiento
+                vuelo[5] = vuelo[5] - 1  # decrementar reservas
+                messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
+                ventana_reservados.destroy()
                 return
+            
+    Button(ventana_reservados, text="Confirmar", command=confirmar).pack(pady=(0,10))    
 
-    Button(ventana, text="Confirmar", command=confirmar).pack(pady=(0,10))
-
-# ---------------------------
-# Estadísticas
-# ---------------------------
 def estadistica_ocupacion():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
+
+    vuelo = vuelos[num_vuelo - 1]
+    id = vuelo[0]
+    origen = vuelo[1]
+    destino = vuelo[2]
     filas, columnas = vuelo[6], vuelo[7]
-    total = filas*columnas
+
+    total = filas * columnas
     ocupados = vuelo[5]
     porcentaje = (ocupados / total) * 100 if total else 0
-    messagebox.showinfo("Estadísticas de ocupación", f"Número interno: {vuelo[0]}\nOrigen/Destino: {vuelo[1]} → {vuelo[2]}\nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
+
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
 
 def estadistica_recaudacion():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
-        return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
-    total = vuelo[3] * vuelo[5]
-    messagebox.showinfo("Estadísticas de recaudación", f"Número interno: {vuelo[0]}\nOrigen/Destino: {vuelo[1]} → {vuelo[2]}\nEntradas vendidas: {vuelo[5]}\nPrecio: {vuelo[3]}\nTotal recaudado: {total}")
 
-# ---------------------------
-# Buscar por destino y mostrar disponibles
-# ---------------------------
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
+        return
+
+    vuelo = vuelos[num_vuelo - 1]
+    id = vuelo[0]
+    origen = vuelo[1]
+    destino = vuelo[2]
+    precio = vuelo[3]
+    reservas = vuelo[5]
+ 
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
+
 def obtener_vuelos_por_destino(destino):
     if destino is None:
         return []
     destino = destino.strip().lower()
     resultados = []
     for i, vuelo in enumerate(vuelos, 1):
-        if isinstance(vuelo[2], str) and vuelo[2].strip().lower() == destino:
-            resultados.append((i, vuelo))
+        if isinstance(vuelo, (list, tuple)) and len(vuelo) > 2:
+            if isinstance(vuelo[2], str) and vuelo[2].strip().lower() == destino:
+                resultados.append((i, vuelo))
     return resultados
+
+
+def buscar_vuelos_por_destino_ui():
+    # Crear ventana para mostrar destinos y búsqueda
+    ventana_busqueda = Toplevel()
+    ventana_busqueda.title("Búsqueda por destino")
+    ventana_busqueda.grab_set()
+    ventana_busqueda.transient(ventana_busqueda.master)
+
+    # Frame izquierdo para destinos disponibles
+    frame_destinos = Frame(ventana_busqueda)
+    frame_destinos.pack(side=LEFT, padx=10, pady=10)
+    
+    Label(frame_destinos, text="Destinos disponibles:", font=("Arial", 9, "bold")).pack()
+    
+    # Obtener destinos únicos
+    destinos = set()
+    for vuelo in vuelos:
+        if vuelo[2]:  # Si el destino no está vacío
+            destinos.add(vuelo[2])
+    
+    # Mostrar destinos en listbox
+    listbox_destinos = Listbox(frame_destinos, width=20, height=10)
+    for destino in sorted(destinos):
+        listbox_destinos.insert(END, destino)
+    listbox_destinos.pack(pady=5)
+
+    # Frame derecho para búsqueda
+    frame_busqueda = Frame(ventana_busqueda)
+    frame_busqueda.pack(side=LEFT, padx=10, pady=10)
+    
+    Label(frame_busqueda, text="Ingrese el destino:").pack(pady=5)
+    entrada = Entry(frame_busqueda)
+    entrada.pack(pady=5)
+    
+    def buscar():
+        destino = entrada.get().strip()
+        if not destino:
+            messagebox.showerror("Error", "Ingrese un destino")
+            return
+            
+        resultados = obtener_vuelos_por_destino(destino)
+        if not resultados:
+            messagebox.showinfo("Resultados", f"No hay vuelos con destino: {destino}")
+            return
+
+        # Mostrar resultados en nueva ventana
+        mostrar_resultados(destino, resultados)
+    
+    Button(frame_busqueda, text="Buscar", command=buscar).pack(pady=5)
+    Button(frame_busqueda, text="Cerrar", command=ventana_busqueda.destroy).pack(pady=5)
 
 def mostrar_resultados(destino, resultados):
     ventana = Toplevel()
     ventana.title(f"Vuelos a {destino}")
     ventana.grab_set()
-    ventana.transient(root)
+    ventana.transient(ventana.master)
+
     listbox = Listbox(ventana, width=80)
     for num, vuelo in resultados:
-        disponibles = sum(1 for fila in vuelo[4] for asiento in fila if not asiento)
-        listbox.insert(END, f"{num} — {vuelo[0]} | {vuelo[1]} → {vuelo[2]} | ₡{vuelo[3]} | Asientos disponibles: {disponibles}")
+        codigo = vuelo[0]
+        origen = vuelo[1]
+        dest = vuelo[2]
+        precio = vuelo[3]
+        matriz = vuelo[4]
+        disponibles = sum(1 for fila in matriz for asiento in fila if not asiento)
+        listbox.insert(END, f"{num} — {codigo} | {origen} → {dest} | ₡{precio} | Asientos disponibles: {disponibles}")
     listbox.pack(padx=10, pady=10)
+
     Button(ventana, text="Cerrar", command=ventana.destroy).pack(pady=(0,10))
 
-def buscar_vuelos_por_destino_ui():
-    ventana = Toplevel()
-    ventana.title("Búsqueda por destino")
-    ventana.grab_set()
-    ventana.transient(root)
-
-    frame_left = Frame(ventana)
-    frame_left.pack(side=LEFT, padx=8, pady=8)
-    Label(frame_left, text="Destinos disponibles:", font=(DEFAULT_FONT[0], 10, "bold")).pack()
-    destinos = sorted({vuelo[2] for vuelo in vuelos if vuelo[2]})
-    listbox = Listbox(frame_left, height=10, width=24)
-    for d in destinos:
-        listbox.insert(END, d)
-    listbox.pack(padx=6, pady=6)
-
-    frame_right = Frame(ventana)
-    frame_right.pack(side=LEFT, padx=8, pady=8)
-    Label(frame_right, text="Ingrese el destino:").pack(pady=(6,0))
-    entrada = Entry(frame_right)
-    entrada.pack(pady=6)
-
-    def buscar():
-        dest = entrada.get().strip()
-        if not dest:
-            messagebox.showerror("Error", "Ingrese un destino.")
-            return
-        resultados = obtener_vuelos_por_destino(dest)
-        if not resultados:
-            messagebox.showinfo("Resultados", f"No hay vuelos con destino: {dest}")
-            return
-        mostrar_resultados(dest, resultados)
-
-    Button(frame_right, text="Buscar", command=buscar).pack(pady=6)
-    Button(frame_right, text="Cerrar", command=ventana.destroy).pack(pady=6)
-
-# ---------------------------
-# Tabla de vuelos disponibles
-# ---------------------------
 def vuelos_disponibles():
     if not vuelos:
         messagebox.showinfo("Vuelos Disponibles", "No hay vuelos registrados.")
         return
-    ventana = Toplevel()
-    ventana.title("Vuelos Disponibles")
-    ventana.grab_set()
-    ventana.transient(root)
-    tabla = ttk.Treeview(ventana, columns=("Número","Código","Origen","Destino","Precio"), show="headings", height=10)
-    for col, txt, w in [("Número","Número",60),("Código","Código",100),("Origen","Origen",120),("Destino","Destino",120),("Precio","Precio",80)]:
-        tabla.heading(col, text=txt)
-        tabla.column(col, width=w)
+    
+    ventana_vuelos = Toplevel()
+    ventana_vuelos.title("Vuelos Disponibles")
+    ventana_vuelos.grab_set()
+    ventana_vuelos.transient(ventana_vuelos.master)
+    
+    # Crear (tabla) para mostrar los vuelos
+    tabla = ttk.Treeview(ventana_vuelos, columns=("Número", "Código", "Origen", "Destino", "Precio"))
+    
+    # Configurar columnas
+    tabla.heading("Número", text="Número")
+    tabla.heading("Código", text="Código")
+    tabla.heading("Origen", text="Origen")
+    tabla.heading("Destino", text="Destino")
+    tabla.heading("Precio", text="Precio")
+    
+    # Ocultar la primera columna vacía
+    tabla.column("#0", width=0, stretch=NO)
+    
+    # Ajustar ancho de columnas
+    tabla.column("Número", width=60)
+    tabla.column("Código", width=100)
+    tabla.column("Origen", width=100)
+    tabla.column("Destino", width=100)
+    tabla.column("Precio", width=100)
+    
+    # Insertar datos
     for i, vuelo in enumerate(vuelos, 1):
-        tabla.insert("", END, values=(i, vuelo[0], vuelo[1], vuelo[2], f"₡{vuelo[3]}"))
+        tabla.insert("", END, values=(
+            i,              # Número de vuelo
+            vuelo[0],      # Código
+            vuelo[1],      # Origen
+            vuelo[2],      # Destino
+            f"₡{vuelo[3]}" # Precio
+        ))
+    
     tabla.pack(padx=10, pady=10)
-    Button(ventana, text="Cerrar", command=ventana.destroy).pack(pady=(0,8))
+    
+    # Botón para cerrar
+    Button(ventana_vuelos, text="Cerrar", command=ventana_vuelos.destroy).pack(pady=10)
 
-# ---------------------------
-# Reservar varios asientos consecutivos
-# ---------------------------
 def Reservar_varios_asientos_consecutivos():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    num = seleccionar_vuelo()
-    if num is None:
-        return
-    vuelo = vuelos[num-1]
+
+    vuelo = vuelos[num_vuelo - 1]
     matriz = vuelo[4]
     filas, columnas = vuelo[6], vuelo[7]
 
@@ -454,68 +532,87 @@ def Reservar_varios_asientos_consecutivos():
     columnas_opciones = [str(i+1) for i in range(columnas)]
 
     ventana = Toplevel()
-    ventana.title(f"Reservar asientos consecutivos - Vuelo {num}")
+    ventana.title(f"Reservar asientos consecutivos - Vuelo {num_vuelo}")
     ventana.grab_set()
-    ventana.transient(root)
+    ventana.transient(ventana.master)
 
-    Label(ventana, text="Fila:").grid(row=0, column=0, padx=8, pady=8)
+    Label(ventana, text="Fila:").grid(row=0, column=0, padx=8, pady=8, sticky="e")
     combo_filas = ttk.Combobox(ventana, values=filas_opciones, state="readonly", width=8)
     combo_filas.current(0)
     combo_filas.grid(row=0, column=1, padx=8, pady=8)
 
-    Label(ventana, text="Asiento inicial:").grid(row=1, column=0, padx=8, pady=8)
+    Label(ventana, text="Asiento inicial:").grid(row=1, column=0, padx=8, pady=8, sticky="e")
     combo_cols = ttk.Combobox(ventana, values=columnas_opciones, state="readonly", width=8)
     combo_cols.current(0)
     combo_cols.grid(row=1, column=1, padx=8, pady=8)
 
-    Label(ventana, text="Cantidad:").grid(row=2, column=0, padx=8, pady=8)
-    spin = Spinbox(ventana, from_=1, to=columnas, width=6)
-    spin.grid(row=2, column=1, padx=8, pady=8)
+    Label(ventana, text="Cantidad consecutiva:").grid(row=2, column=0, padx=8, pady=8, sticky="e")
+    spin_cantidad = Spinbox(ventana, from_=1, to=columnas, width=6)
+    spin_cantidad.grid(row=2, column=1, padx=8, pady=8)
 
     def confirmar():
         fila_label = combo_filas.get()
         col_label = combo_cols.get()
         try:
-            cantidad = int(spin.get())
-        except Exception:
+            cantidad = int(spin_cantidad.get())
+        except ValueError:
             messagebox.showerror("Error", "Cantidad inválida.")
             return
+
         if not fila_label or not col_label:
             messagebox.showerror("Error", "Seleccione fila y asiento inicial.")
             return
+
         fila_idx = filas_opciones.index(fila_label)
-        start_col = int(col_label) - 1
-        if cantidad < 1 or start_col + cantidad > columnas:
-            messagebox.showerror("Error", "Bloque fuera de límites.")
+        start_col_idx = int(col_label) - 1
+
+        # Validaciones de límites
+        if cantidad < 1:
+            messagebox.showerror("Error", "La cantidad debe ser al menos 1.")
             return
-        ocupados = [f"{obtener_letra_fila(fila_idx)}{j+1}" for j in range(start_col, start_col+cantidad) if matriz[fila_idx][j]]
+        if start_col_idx + cantidad > columnas:
+            messagebox.showerror("Error", "No hay espacio suficiente hacia la derecha en esa fila.")
+            return
+
+        # Comprobar disponibilidad del bloque
+        ocupados = []
+        for j in range(start_col_idx, start_col_idx + cantidad):
+            if matriz[fila_idx][j]:
+                ocupados.append(f"{obtener_letra_fila(fila_idx)}{j+1}")
+
         if ocupados:
-            messagebox.showerror("Error", f"No se puede reservar. Ocupados: {' '.join(ocupados)}")
+            messagebox.showerror("Error", f"No se puede reservar. Asientos ocupados: {' '.join(ocupados)}")
             return
+
+        # Reservar todos los asientos del bloque
         reservados = []
-        for j in range(start_col, start_col+cantidad):
+        for j in range(start_col_idx, start_col_idx + cantidad):
             matriz[fila_idx][j] = True
             reservados.append(f"{obtener_letra_fila(fila_idx)}{j+1}")
+
         vuelo[5] += cantidad
-        messagebox.showinfo("Reservado", f"Reservados: {' '.join(reservados)}")
+        messagebox.showinfo("Reservado", f"¡Reservados exitosamente: {' '.join(reservados)}!")
         ventana.destroy()
 
-    Button(ventana, text="Confirmar", command=confirmar).grid(row=3, column=0, padx=8, pady=10)
-    Button(ventana, text="Cancelar", command=ventana.destroy).grid(row=3, column=1, padx=8, pady=10)
+    Button(ventana, text="Confirmar", command=confirmar).grid(row=3, column=0, padx=8, pady=12)
+    Button(ventana, text="Cancelar", command=ventana.destroy).grid(row=3, column=1, padx=8, pady=12)
 
-# ---------------------------
-# Simular venta masiva
-# ---------------------------
 def Simular_venta_masiva():
+    """
+    Pide un porcentaje y para cada vuelo intenta reservar aleatoriamente
+    ese porcentaje de asientos (sin desreservar si ya tiene más).
+    """
     if not vuelos:
         messagebox.showinfo("Simular venta masiva", "No hay vuelos registrados.")
         return
+
     porcentaje = simpledialog.askinteger("Simular venta masiva", "Ingrese porcentaje (1-100):")
     if porcentaje is None:
         return
     if porcentaje < 1 or porcentaje > 100:
         messagebox.showerror("Error", "Porcentaje inválido.")
         return
+
     resultados = []
     for idx, vuelo in enumerate(vuelos, 1):
         matriz = vuelo[4]
@@ -523,108 +620,113 @@ def Simular_venta_masiva():
         total = filas * columnas
         objetivo = int(round(total * (porcentaje / 100.0)))
         actuales = vuelo[5]
+
         if actuales >= objetivo:
-            resultados.append(f"{idx} — {vuelo[0]}: ya tiene {actuales} (>= objetivo {objetivo})")
+            resultados.append(f"{idx} — {vuelo[0] or 'sin código'}: ya tiene {actuales} (>= objetivo {objetivo})")
             continue
+
         necesidad = objetivo - actuales
-        libres = [(r,c) for r in range(filas) for c in range(columnas) if not matriz[r][c]]
+        # recolectar asientos libres
+        libres = [(r, c) for r in range(filas) for c in range(columnas) if not matriz[r][c]]
         if not libres:
-            resultados.append(f"{idx} — {vuelo[0]}: no hay asientos libres.")
+            resultados.append(f"{idx} — {vuelo[0] or 'sin código'}: no hay asientos libres.")
             continue
-        cuanto = min(necesidad, len(libres))
-        seleccion = random.sample(libres, cuanto)
+
+        cuanto_reservar = min(necesidad, len(libres))
+        seleccionados = random.sample(libres, cuanto_reservar)
         etiquetas = []
-        for r,c in seleccion:
+        for r, c in seleccionados:
             matriz[r][c] = True
             etiquetas.append(f"{obtener_letra_fila(r)}{c+1}")
-        vuelo[5] += len(seleccion)
-        resultados.append(f"{idx} — {vuelo[0]}: reservados {len(seleccion)} -> {' '.join(etiquetas)}")
-    ventana = Toplevel()
-    ventana.title("Resultado simulación")
-    ventana.grab_set()
-    ventana.transient(root)
-    listbox = Listbox(ventana, width=90)
+
+        vuelo[5] += len(seleccionados)
+        resultados.append(f"{idx} — {vuelo[0] or 'sin código'}: reservados {len(seleccionados)} -> {' '.join(etiquetas)}" if etiquetas else f"{idx} — {vuelo[0] or 'sin código'}: nada reservado")
+
+    # Mostrar resumen en ventana
+    ventana_res = Toplevel()
+    ventana_res.title("Resultado simulación")
+    ventana_res.grab_set()
+    ventana_res.transient(ventana_res.master)
+
+    listbox = Listbox(ventana_res, width=80)
     for linea in resultados:
         listbox.insert(END, linea)
     listbox.pack(padx=10, pady=10)
-    Button(ventana, text="Cerrar", command=ventana.destroy).pack(pady=(0,10))
 
-# ---------------------------
-# Reiniciar vuelo
-# ---------------------------
+    Button(ventana_res, text="Cerrar", command=ventana_res.destroy).pack(pady=(0,10))
+
 def Reiniciar_vuelo():
-    if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+
+    num_vuelo = seleccionar_vuelo()
+    if num_vuelo is None:
         return
-    num = seleccionar_vuelo()
-    if num is None:
+
+    vuelo = vuelos[num_vuelo - 1]
+
+    # Pedir confirmación
+    if not messagebox.askyesno("Confirmar reinicio", f"¿Desea reiniciar el vuelo {num_vuelo} ({vuelo[0]})?"):
         return
-    vuelo = vuelos[num-1]
-    if not messagebox.askyesno("Confirmar reinicio", f"¿Desea reiniciar el vuelo {num} ({vuelo[0]})?"):
-        return
+    
     matriz = vuelo[4]
     for i in range(len(matriz)):
         for j in range(len(matriz[i])):
             matriz[i][j] = False
+    
     vuelo[5] = 0
-    messagebox.showinfo("Reinicio", f"Reinicio del vuelo {num} realizado.")
 
-# ---------------------------
-# Interfaz principal
-# ---------------------------
-root = Tk()
-root.title("Sistema de Reserva de Vuelos")
-ww, wh = 980, 680
-centrar_ventana(root, ww, wh)
-root.resizable(False, False)
+    messagebox.showinfo("Reinicio", f"Reinicio del vuelo {num_vuelo} ({vuelo[0]}) realizado correctamente.")
+
+# -----------------------------------------------------------------------------------------
+# Ventana Principal (MODIFICADA)
+# -----------------------------------------------------------------------------------------
+
+ventana = Tk()
+ventana.title("Sistema de reserva de vuelos")
+
+# Definir tamaño
+ventana.geometry("800x550+0+0")
+ventana.resizable(False, False)
+ventana.update_idletasks()
 
 style = ttk.Style()
-try:
-    style.theme_use('clam')
-except Exception:
-    pass
-style.configure("TButton", font=DEFAULT_FONT, padding=6)
-style.configure("TLabel", font=DEFAULT_FONT)
+imagen_fondo = PhotoImage(file="\proyecto-intro-I\cielo.jpg")
 
-main = Frame(root, bg="#ffffff")
-main.pack(fill=BOTH, expand=True)
+fondo_label = Label(ventana, image=imagen_fondo)
+fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-sidebar = Frame(main, width=280, bg="#ffffff", bd=1, relief=RIDGE)
-sidebar.pack(side=LEFT, fill=Y, padx=12, pady=12)
+#Fila 0
+Button1 = Button(ventana, text="Crear nuevo vuelo", command=Crear_nuevo_vuelo).place(x=25, y=25, width=245, height=50)
 
-content = Frame(main, bg="#ffffff")
-content.pack(side=LEFT, fill=BOTH, expand=True, padx=12, pady=12)
+Button2 = Button(ventana, text="Asignar origen/destino y precio al vuelo", command=origen_destino_precio).place(x=275, y=25, width=245, height=50)
 
-# Botones (mantener textos similares)
-buttons = [
-    ("1. Crear nuevo vuelo", Crear_nuevo_vuelo),
-    ("2. Origen/destino y precio al vuelo", origen_destino_precio),
-    ("3. Ver estado del vuelo", estado_vuelo),
-    ("4. Reservar asientos", reservar_asiento),
-    ("5. Cancelar reserva", cancelar_reserva),
-    ("6. Ver estadística de ocupación", estadistica_ocupacion),
-    ("7. Ver estadística de recaudación", estadistica_recaudacion),
-    ("8. Buscar vuelo por destino", buscar_vuelos_por_destino_ui),
-    ("9. Vuelos disponibles", vuelos_disponibles),
-    ("10. Reservar varios asientos", Reservar_varios_asientos_consecutivos),
-    ("11. Simular venta masiva", Simular_venta_masiva),
-    ("12. Reiniciar vuelo", Reiniciar_vuelo),
-    ("13. Salir", root.quit)
-]
+Button3 = Button(ventana, text="Ver estado del vuelo", command=estado_vuelo).place(x=525, y=25, width=245, height=50)
 
-# colocar botones en 3 columnas
-cols = 3
-for c in range(cols):
-    sidebar.columnconfigure(c, weight=1, uniform="col")
+#Fila 1
+Button4 = Button(ventana, text="Reservar asientos", command=reservar_asiento).place(x=25, y=80, width=245, height=50)
 
-for idx, (text, cmd) in enumerate(buttons):
-    r = idx // cols
-    
-    if idx == len(buttons) - 1:
-        c = cols // 2
-    else:
-        c = idx % cols
-    btn = ttk.Button(sidebar, text=text, command=cmd, width=28)
-    btn.grid(row=r, column=c, padx=6, pady=6, sticky="ew")
+Button5 = Button(ventana, text="Cancelar reserva", command=cancelar_reserva).place(x=275, y=80, width=245, height=50)
 
-root.mainloop()
+Button6 = Button(ventana, text="Ver estadistica de ocupacion", command=estadistica_ocupacion).place(x=525, y=80, width=245, height=50)
+
+#Fila 2
+Button7 = Button(ventana, text="Ver estadistica de recaudacion", command=estadistica_recaudacion).place(x=25, y=135, width=245, height=50)
+
+Button8 = Button(ventana, text="Buscar vuelo por destino", command=buscar_vuelos_por_destino_ui).place(x=275, y=135, width=245, height=50)
+
+Button9 = Button(ventana, text="Vuelos disponibles", command=vuelos_disponibles).place(x=525, y=135, width=245, height=50)
+
+#Fila 3
+Button10 = Button(ventana, text="Reservar varios asientos consecutivos", command=Reservar_varios_asientos_consecutivos).place(x=25, y=190, width=245, height=50)
+
+Button11 = Button(ventana, text="Simular venta masiva", command=Simular_venta_masiva).place(x=275, y=190, width=245, height=50)
+
+Button12 = Button(ventana, text="Reiniciar vuelo", command=Reiniciar_vuelo).place(x=525, y=190, width=245, height=50)
+
+#Fila 4(centro)
+Button13 = Button(ventana, text="Salir", command=ventana.quit).place(x=275, y=245, width=245, height=50)
+
+botones =[Button1,Button2,Button3,Button4,Button5,Button6 ,Button7,Button8,Button9,Button10,Button11,Button12,Button13]
+
+
+
+ventana.mainloop()
