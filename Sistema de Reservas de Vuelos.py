@@ -18,10 +18,43 @@ def obtener_letra_fila(n):
         n -= 1
     return letras
 
+def mensaje_personalizado(titulo, texto, tipo="info", duracion=1500):
+    ventana_msg = Toplevel()
+    ventana_msg.title(titulo)
+    ventana_msg.geometry("350x150")
+    ventana_msg.resizable(False, False)
+    ventana_msg.attributes("-topmost", True)
+
+    try:
+        ruta = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
+        img = Image.open(ruta)
+        img = img.copy()
+        img.thumbnail((400, 200), Image.LANCZOS)
+        img_tk = ImageTk.PhotoImage(img)
+
+        fondo_label = Label(ventana_msg, image=img_tk)
+        fondo_label.image = img_tk
+        fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
+    except Exception:
+        ventana_msg.configure(bg="#433859")
+
+    Label(
+        ventana_msg,
+        text=texto,
+        font=("Century Gothic", 11),
+        bg="#433859",
+        fg="white",
+        wraplength=300,
+        justify="center"
+    ).place(relx=0.5, rely=0.5, anchor="center")
+
+    ventana_msg.after(duracion, ventana_msg.destroy)
+
+
 # Funcion para seleccionar el vuelo sin tener que escribirlo
 def seleccionar_vuelo():
     if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+        mensaje_personalizado("Error", "No hay vuelos disponibles.", tipo="error")
         return None
     
     # Crear una ventana para seleccionar
@@ -78,7 +111,7 @@ def Crear_nuevo_vuelo():
             return
 
         if filas >  50:
-            messagebox.showerror("Error","Numero de filas invalidas, no puden pasar de 50")
+            mensaje_personalizado("Error","Numero de filas invalidas, no puden pasar de 50")
             
         else:
             break
@@ -92,11 +125,11 @@ def Crear_nuevo_vuelo():
         if columnas is None:
             return
         elif columnas >  20:
-            messagebox.showerror("Error","Numero de columnas invalidas, no puden pasar de 20")
+            mensaje_personalizado("Error","Numero de columnas invalidas, no puden pasar de 20")
         elif filas >= 1 and columnas >= 1 and filas <= 50 and columnas <= 20:
             break
         else:
-            messagebox.showerror("Error", "Datos inválidos.")
+            mensaje_personalizado("Error", "Datos inválidos.")
         # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     # matriz de asientos (False = libre, True = reservado)
@@ -116,13 +149,13 @@ def Crear_nuevo_vuelo():
 
     vuelos.append(vuelo)
 
-    messagebox.showinfo("Vuelo creado", f"¡Vuelo {contador_vuelos} creado exitosamente!")
+    mensaje_personalizado("Vuelo creado", f"¡Vuelo {contador_vuelos} creado exitosamente!")
     contador_vuelos += 1
 
 def origen_destino_precio():
 
     if not vuelos:
-        messagebox.showerror("Error", "No hay vuelos disponibles.")
+        mensaje_personalizado("Error", "No hay vuelos disponibles.")
         return
     
     # Usar la ventana de selección para obtener el número interno
@@ -144,7 +177,7 @@ def origen_destino_precio():
             break
 
         else:
-            messagebox.showerror("Error", "El código no puede estar vacío.")
+            mensaje_personalizado("Error", "El código no puede estar vacío.")
         # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     while True:
@@ -157,7 +190,7 @@ def origen_destino_precio():
 
         # Validar que solo tenga letras y espacios
         if not all(palabra.isalpha() for palabra in origen.split()):
-            messagebox.showerror("Error", "El origen solo debe contener letras y espacios.")
+            mensaje_personalizado("Error", "El origen solo debe contener letras y espacios.")
             
         else:
             break
@@ -172,7 +205,7 @@ def origen_destino_precio():
             return
 
         if not all(palabra.isalpha() for palabra in destino.split()):
-            messagebox.showerror("Error", "El destino solo debe contener letras y espacios.")
+            mensaje_personalizado("Error", "El destino solo debe contener letras y espacios.")
         
         else:
              break
@@ -187,7 +220,7 @@ def origen_destino_precio():
             return
         
         if precio < 1:
-            messagebox.showerror("Error","El precio no puede ser 0 o menor a 0")
+            mensaje_personalizado("Error","El precio no puede ser 0 o menor a 0")
 
         else:
             break
@@ -198,7 +231,7 @@ def origen_destino_precio():
     vuelo[2] = destino
     vuelo[3] = precio
 
-    messagebox.showinfo("Vuelo creado", f"Datos del vuelo {num_vuelo} asignados correctamente")
+    mensaje_personalizado("Vuelo creado", f"Datos del vuelo {num_vuelo} asignados correctamente")
 
 
 def estado_vuelo():
@@ -274,7 +307,7 @@ def reservar_asiento():
                 asientos_libres.append((i, j, etiqueta))
 
     if not asientos_libres:
-        messagebox.showinfo("Sin asientos", "No hay asientos disponibles en este vuelo.")
+        mensaje_personalizado("Sin asientos", "No hay asientos disponibles en este vuelo.")
         return
 
     ventana = Toplevel()
@@ -292,14 +325,14 @@ def reservar_asiento():
     def confirmar():
         sel = combo.get()
         if sel == "" or sel == "Seleccione":
-            messagebox.showerror("Error", "Seleccione un asiento.")
+            mensaje_personalizado("Error", "Seleccione un asiento.")
             return
         # buscar indices del asiento seleccionado
         for fila_idx, col_idx, etiqueta in asientos_libres:
             if etiqueta == sel:
                 matriz[fila_idx][col_idx] = True           # marcar reservado
                 vuelo[5] = vuelo[5] + 1                    # incrementar contador reservas (índice 5)
-                messagebox.showinfo("Reservado", f"Asiento {sel} reservado correctamente.")
+                mensaje_personalizado("Reservado", f"Asiento {sel} reservado correctamente.")
                 ventana.destroy()
                 return
 
@@ -314,7 +347,7 @@ def cancelar_reserva():
     vuelo = vuelos[num_vuelo - 1]
 
     if vuelo[5] == 0:
-        messagebox.showerror("ERROR","el vuelo no tiene asientos reservados")
+        mensaje_personalizado("ERROR","el vuelo no tiene asientos reservados")
         return
     
     # Lista para guardar asientos ocupados
@@ -346,7 +379,7 @@ def cancelar_reserva():
     def confirmar():
         sel = lista.get()
         if sel == "" or sel == "Seleccione asiento":
-            messagebox.showerror("Error", "Seleccione un asiento.")
+            mensaje_personalizado("Error", "Seleccione un asiento.")
             return
         
         # buscar indices del asiento seleccionado
@@ -354,7 +387,7 @@ def cancelar_reserva():
             if etiqueta == sel:
                 matriz[fila_idx][col_idx] = False  # liberar asiento
                 vuelo[5] = vuelo[5] - 1  # decrementar reservas
-                messagebox.showinfo("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
+                mensaje_personalizado("Cancelado", f"Reserva del asiento {sel} cancelada correctamente.")
                 ventana_reservados.destroy()
                 return
             
@@ -376,7 +409,7 @@ def estadistica_ocupacion():
     ocupados = vuelo[5]
     porcentaje = (ocupados / total) * 100 if total else 0
 
-    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
+    mensaje_personalizado("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
 
 def estadistica_recaudacion():
 
@@ -391,7 +424,7 @@ def estadistica_recaudacion():
     precio = vuelo[3]
     reservas = vuelo[5]
  
-    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
+    mensaje_personalizado("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
 
 def obtener_vuelos_por_destino(destino):
     if destino is None:
@@ -441,12 +474,13 @@ def buscar_vuelos_por_destino_ui():
     def buscar():
         destino = entrada.get().strip()
         if not destino:
-            messagebox.showerror("Error", "Ingrese un destino")
+            mensaje_personalizado("Error", "Ingrese un destino", tipo="error")
+
             return
             
         resultados = obtener_vuelos_por_destino(destino)
         if not resultados:
-            messagebox.showinfo("Resultados", f"No hay vuelos con destino: {destino}")
+            mensaje_personalizado("Error", f"No hay vuelos disponibles hacia {destino}.", tipo="error")
             return
 
         # Mostrar resultados en nueva ventana
@@ -476,7 +510,8 @@ def mostrar_resultados(destino, resultados):
 
 def vuelos_disponibles():
     if not vuelos:
-        messagebox.showinfo("Vuelos Disponibles", "No hay vuelos registrados.")
+        mensaje_personalizado("Error", "No hay vuelos disponibles.", tipo="error")
+
         return
     
     ventana_vuelos = Toplevel()
@@ -556,11 +591,11 @@ def Reservar_varios_asientos_consecutivos():
         try:
             cantidad = int(spin_cantidad.get())
         except ValueError:
-            messagebox.showerror("Error", "Cantidad inválida.")
+            mensaje_personalizado("Error", "Cantidad inválida.")
             return
 
         if not fila_label or not col_label:
-            messagebox.showerror("Error", "Seleccione fila y asiento inicial.")
+            mensaje_personalizado("Error", "Seleccione fila y asiento inicial.")
             return
 
         fila_idx = filas_opciones.index(fila_label)
@@ -568,10 +603,10 @@ def Reservar_varios_asientos_consecutivos():
 
         # Validaciones de límites
         if cantidad < 1:
-            messagebox.showerror("Error", "La cantidad debe ser al menos 1.")
+            mensaje_personalizado("Error", "La cantidad debe ser al menos 1.")
             return
         if start_col_idx + cantidad > columnas:
-            messagebox.showerror("Error", "No hay espacio suficiente hacia la derecha en esa fila.")
+            mensaje_personalizado("Error", "No hay espacio suficiente hacia la derecha en esa fila.")
             return
 
         # Comprobar disponibilidad del bloque
@@ -581,7 +616,8 @@ def Reservar_varios_asientos_consecutivos():
                 ocupados.append(f"{obtener_letra_fila(fila_idx)}{j+1}")
 
         if ocupados:
-            messagebox.showerror("Error", f"No se puede reservar. Asientos ocupados: {' '.join(ocupados)}")
+            mensaje_personalizado("Error", f"No se puede reservar. Asientos ocupados: {' '.join(ocupados)}", tipo="error")
+
             return
 
         # Reservar todos los asientos del bloque
@@ -591,26 +627,25 @@ def Reservar_varios_asientos_consecutivos():
             reservados.append(f"{obtener_letra_fila(fila_idx)}{j+1}")
 
         vuelo[5] += cantidad
-        messagebox.showinfo("Reservado", f"¡Reservados exitosamente: {' '.join(reservados)}!")
+        mensaje_personalizado("Reservado", f"¡Reservados exitosamente: {' '.join(reservados)}!")
+
         ventana.destroy()
 
     Button(ventana, text="Confirmar", command=confirmar).grid(row=3, column=0, padx=8, pady=12)
     Button(ventana, text="Cancelar", command=ventana.destroy).grid(row=3, column=1, padx=8, pady=12)
 
 def Simular_venta_masiva():
-    """
-    Pide un porcentaje y para cada vuelo intenta reservar aleatoriamente
-    ese porcentaje de asientos (sin desreservar si ya tiene más).
-    """
     if not vuelos:
-        messagebox.showinfo("Simular venta masiva", "No hay vuelos registrados.")
+        mensaje_personalizado("Error", "No hay vuelos disponibles.", tipo="error")
+
         return
 
     porcentaje = simpledialog.askinteger("Simular venta masiva", "Ingrese porcentaje (1-100):")
     if porcentaje is None:
         return
     if porcentaje < 1 or porcentaje > 100:
-        messagebox.showerror("Error", "Porcentaje inválido.")
+        mensaje_personalizado("Error", "Porcentaje invalido.", tipo="error")
+
         return
 
     resultados = []
@@ -674,7 +709,8 @@ def Reiniciar_vuelo():
     
     vuelo[5] = 0
 
-    messagebox.showinfo("Reinicio", f"Reinicio del vuelo {num_vuelo} ({vuelo[0]}) realizado correctamente.")
+    mensaje_personalizado("Reinicio", f"Reinicio del vuelo {num_vuelo} ({vuelo[0]}) realizado correctamente.")
+
 
 # -----------------------------------------------------------------------------------------
 # Ventana Principal (MODIFICADA)
@@ -682,6 +718,8 @@ def Reiniciar_vuelo():
 
 ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
+ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+
 
 # Definir tamaño
 ventana.geometry("800x550+0+0")
@@ -709,8 +747,8 @@ style.theme_use("clam")  # permite personalización de colores
 # Estilo general para todos los botones del menú
 style.configure(
     "Menu.TButton",
-    font=("Segoe UI", 8, "bold"),
-    background="#3C719D", 
+    font=("Verdana", 8, "bold"),
+    background="#5D648C", 
     foreground="white",
     padding=8,
     borderwidth=0
@@ -719,90 +757,90 @@ style.configure(
 # Efectos de hover y click
 style.map(
     "Menu.TButton",
-    background=[("active", "#005A9E")],
+    background=[("active", "#433859")],
     foreground=[("active", "white")]
 )
 
 # Estilo especial para el botón "Salir"
 style.configure(
     "Salir.TButton",
-    font=("Segoe UI", 11, "bold"),
-    background="#D9534F",   # rojo
+    font=("Verdana", 10, "bold"),
+    background="#444B6F",   # rojo
     foreground="white",
     padding=8,
     borderwidth=0
 )
 style.map(
     "Salir.TButton",
-    background=[("active", "#C9302C")]
+    background=[("active", "#363C5A")]
 )
 
 # -----------------------------------------------------------------------------------------
 # Fila 0
 # -----------------------------------------------------------------------------------------
 Button1 = ttk.Button(ventana, text="Crear nuevo vuelo", command=Crear_nuevo_vuelo, style="Menu.TButton")
-Button1.place(x=25, y=25, width=245, height=50)
+Button1.place(x=25, y=80, width=245, height=50)
 Button1.configure(cursor="hand2")
 
-Button2 = ttk.Button(ventana, text="Asignar origen/destino y precio al vuelo", command=origen_destino_precio, style="Menu.TButton")
-Button2.place(x=275, y=25, width=245, height=50)
+Button2 = ttk.Button(ventana, text="Origen/destino y precio al vuelo", command=origen_destino_precio, style="Menu.TButton")
+Button2.place(x=275, y=80, width=245, height=50)
 Button2.configure(cursor="hand2")
 
 
 Button3 = ttk.Button(ventana, text="Ver estado del vuelo", command=estado_vuelo, style="Menu.TButton")
-Button3.place(x=525, y=25, width=245, height=50)
+Button3.place(x=525, y=80, width=245, height=50)
 Button3.configure(cursor="hand2")
 
 # -----------------------------------------------------------------------------------------
 # Fila 1
 # -----------------------------------------------------------------------------------------
 Button4 = ttk.Button(ventana, text="Reservar asientos", command=reservar_asiento, style="Menu.TButton")
-Button4.place(x=25, y=80, width=245, height=50)
+Button4.place(x=25, y=135, width=245, height=50)
 Button4.configure(cursor="hand2")
 
 Button5 = ttk.Button(ventana, text="Cancelar reserva", command=cancelar_reserva, style="Menu.TButton")
-Button5.place(x=275, y=80, width=245, height=50)
+Button5.place(x=275, y=135, width=245, height=50)
 Button5.configure(cursor="hand2")
 
 Button6 = ttk.Button(ventana, text="Ver estadistica de ocupacion", command=estadistica_ocupacion, style="Menu.TButton")
-Button6.place(x=525, y=80, width=245, height=50)
+Button6.place(x=525, y=135, width=245, height=50)
 Button6.configure(cursor="hand2")
 
 # -----------------------------------------------------------------------------------------
 # Fila 2
 # -----------------------------------------------------------------------------------------
 Button7 = ttk.Button(ventana, text="Ver estadistica de recaudacion", command=estadistica_recaudacion, style="Menu.TButton")
-Button7.place(x=25, y=135, width=245, height=50)
+Button7.place(x=25, y=190, width=245, height=50)
 Button7.configure(cursor="hand2")
 
 Button8 = ttk.Button(ventana, text="Buscar vuelo por destino", command=buscar_vuelos_por_destino_ui, style="Menu.TButton")
-Button8.place(x=275, y=135, width=245, height=50)
+Button8.place(x=275, y=190, width=245, height=50)
 Button8.configure(cursor="hand2")
 
 Button9 = ttk.Button(ventana, text="Vuelos disponibles", command=vuelos_disponibles, style="Menu.TButton")
-Button9.place(x=525, y=135, width=245, height=50)
+Button9.place(x=525, y=190, width=245, height=50)
 Button9.configure(cursor="hand2")
 
 # -----------------------------------------------------------------------------------------
 # Fila 3
 # -----------------------------------------------------------------------------------------
-Button10 = ttk.Button(ventana, text="Reservar varios asientos consecutivos", command=Reservar_varios_asientos_consecutivos, style="Menu.TButton")
-Button10.place(x=25, y=190, width=245, height=50)
+Button10 = ttk.Button(ventana, text="Reservar asientos consecutivos", command=Reservar_varios_asientos_consecutivos, style="Menu.TButton")
+Button10.place(x=25, y=245, width=245, height=50)
 Button10.configure(cursor="hand2")
 
 Button11 = ttk.Button(ventana, text="Simular venta masiva", command=Simular_venta_masiva, style="Menu.TButton")
-Button11.place(x=275, y=190, width=245, height=50)
+Button11.place(x=275, y=245, width=245, height=50)
 Button11.configure(cursor="hand2")
 
 Button12 = ttk.Button(ventana, text="Reiniciar vuelo", command=Reiniciar_vuelo, style="Menu.TButton")
-Button12.place(x=525, y=190, width=245, height=50)
+Button12.place(x=525, y=245, width=245, height=50)
 Button12.configure(cursor="hand2")
 
 # -----------------------------------------------------------------------------------------
 # Fila 4 (centro)
 # -----------------------------------------------------------------------------------------
 Button13 = ttk.Button(ventana, text="Salir", command=ventana.quit, style="Salir.TButton")
-Button13.place(x=275, y=245, width=245, height=50)
+Button13.place(x=275, y=300, width=245, height=50)
 Button13.configure(cursor="hand2")
 
 ventana.mainloop()
