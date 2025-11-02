@@ -24,6 +24,7 @@ def mensaje_personalizado(titulo, texto, tipo="info", duracion=1500):
     ventana_msg.geometry("350x150")
     ventana_msg.resizable(False, False)
     ventana_msg.attributes("-topmost", True)
+    ventana_msg.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
 
     try:
         ruta = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
@@ -62,6 +63,7 @@ def seleccionar_vuelo():
     ventana_seleccion.title("Seleccionar Vuelo")
     ventana_seleccion.grab_set()
     ventana_seleccion.transient(ventana_seleccion.master)
+    ventana_seleccion.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
     
     Label(ventana_seleccion, text="Seleccione el número del vuelo:").pack(padx=10, pady=(10,0))
     
@@ -105,6 +107,7 @@ def Crear_nuevo_vuelo():
 
     while True:
         filas = simpledialog.askinteger("Crear vuelo", "Cantidad de filas:")
+        
 
         # Validaciones -- -- -- -- -- -- -- -- -- --
         if filas is None:
@@ -249,6 +252,7 @@ def estado_vuelo():
 
     ventana_estado = Toplevel()
     ventana_estado.title(f"Estado del vuelo {num_vuelo}")
+    ventana_estado.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
     canvas = Canvas(ventana_estado, width=columnas*tamaño + margen, height=filas*tamaño + margen + margen_superior)
     canvas.pack()
     canvas.create_text(margen + (columnas*tamaño)//2, 10, text="VUELO", font=("Arial", 9, "bold"))
@@ -314,6 +318,7 @@ def reservar_asiento():
     ventana.title(f"Seleccionar asiento - Vuelo {num_vuelo}")
     ventana.grab_set()
     ventana.transient(ventana.master)
+    ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
     Label(ventana, text="Seleccione un asiento disponible:").pack(padx=10, pady=(10,0))
 
     # combobox con solo las etiquetas
@@ -369,6 +374,7 @@ def cancelar_reserva():
     ventana_reservados.title(f"Asientos Ocupados - vuelo {num_vuelo}")
     ventana_reservados.grab_set()
     ventana_reservados.transient(ventana_reservados.master)
+    ventana_reservados.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
 
     # Mostrar solo las etiquetas en el combobox
     valores = [asiento[2] for asiento in ocupados]
@@ -409,7 +415,7 @@ def estadistica_ocupacion():
     ocupados = vuelo[5]
     porcentaje = (ocupados / total) * 100 if total else 0
 
-    mensaje_personalizado("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nAsientos: {total}\nOcupados: {ocupados}\n% Ocupación: {porcentaje:.1f}%")
 
 def estadistica_recaudacion():
 
@@ -424,7 +430,7 @@ def estadistica_recaudacion():
     precio = vuelo[3]
     reservas = vuelo[5]
  
-    mensaje_personalizado("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
+    messagebox.showinfo("Estadisticas de ocupacion", f"numero interno: {id} \nsalida/destino: {origen} → {destino} \nEntradas vendidas: {reservas} \nprecio del boleto: {precio} \ntotal recaudado: {(precio*reservas)} ")
 
 def obtener_vuelos_por_destino(destino):
     if destino is None:
@@ -444,6 +450,7 @@ def buscar_vuelos_por_destino_ui():
     ventana_busqueda.title("Búsqueda por destino")
     ventana_busqueda.grab_set()
     ventana_busqueda.transient(ventana_busqueda.master)
+    ventana_busqueda.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
 
     # Frame izquierdo para destinos disponibles
     frame_destinos = Frame(ventana_busqueda)
@@ -518,6 +525,7 @@ def vuelos_disponibles():
     ventana_vuelos.title("Vuelos Disponibles")
     ventana_vuelos.grab_set()
     ventana_vuelos.transient(ventana_vuelos.master)
+    ventana_vuelos.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
     
     # Crear (tabla) para mostrar los vuelos
     tabla = ttk.Treeview(ventana_vuelos, columns=("Número", "Código", "Origen", "Destino", "Precio"))
@@ -570,6 +578,7 @@ def Reservar_varios_asientos_consecutivos():
     ventana.title(f"Reservar asientos consecutivos - Vuelo {num_vuelo}")
     ventana.grab_set()
     ventana.transient(ventana.master)
+    ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
 
     Label(ventana, text="Fila:").grid(row=0, column=0, padx=8, pady=8, sticky="e")
     combo_filas = ttk.Combobox(ventana, values=filas_opciones, state="readonly", width=8)
@@ -682,6 +691,7 @@ def Simular_venta_masiva():
     ventana_res.title("Resultado simulación")
     ventana_res.grab_set()
     ventana_res.transient(ventana_res.master)
+    ventana_res.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
 
     listbox = Listbox(ventana_res, width=80)
     for linea in resultados:
@@ -765,7 +775,7 @@ style.map(
 style.configure(
     "Salir.TButton",
     font=("Verdana", 10, "bold"),
-    background="#444B6F",   # rojo
+    background="#444B6F",
     foreground="white",
     padding=8,
     borderwidth=0
