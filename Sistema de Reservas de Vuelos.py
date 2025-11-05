@@ -24,10 +24,10 @@ def mensaje_personalizado(titulo, texto, tipo="info", duracion=1500):
     ventana_msg.geometry("350x150")
     ventana_msg.resizable(False, False)
     ventana_msg.attributes("-topmost", True)
-    ventana_msg.iconbitmap("avion.ico")
+    ventana_msg.iconbitmap("images/avion.ico")
 
     try:
-        ruta = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
+        ruta = "images/cielo.jpg"
         img = Image.open(ruta)
         img = img.copy()
         img.thumbnail((400, 200), Image.LANCZOS)
@@ -252,7 +252,7 @@ def estado_vuelo():
 
     ventana_estado = Toplevel()
     ventana_estado.title(f"Estado del vuelo {num_vuelo}")
-    ventana_estado.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_estado.iconbitmap("images/avion.ico")
     canvas = Canvas(ventana_estado, width=columnas*tamaño + margen, height=filas*tamaño + margen + margen_superior)
     canvas.pack()
     canvas.create_text(margen + (columnas*tamaño)//2, 10, text="VUELO", font=("Arial", 9, "bold"))
@@ -318,7 +318,7 @@ def reservar_asiento():
     ventana.title(f"Seleccionar asiento - Vuelo {num_vuelo}")
     ventana.grab_set()
     ventana.transient(ventana.master)
-    ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana.iconbitmap("images/avion.ico")
     Label(ventana, text="Seleccione un asiento disponible:").pack(padx=10, pady=(10,0))
 
     # combobox con solo las etiquetas
@@ -374,7 +374,7 @@ def cancelar_reserva():
     ventana_reservados.title(f"Asientos Ocupados - vuelo {num_vuelo}")
     ventana_reservados.grab_set()
     ventana_reservados.transient(ventana_reservados.master)
-    ventana_reservados.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_reservados.iconbitmap("images/avion.ico")
 
     # Mostrar solo las etiquetas en el combobox
     valores = [asiento[2] for asiento in ocupados]
@@ -450,7 +450,7 @@ def buscar_vuelos_por_destino_ui():
     ventana_busqueda.title("Búsqueda por destino")
     ventana_busqueda.grab_set()
     ventana_busqueda.transient(ventana_busqueda.master)
-    ventana_busqueda.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_busqueda.iconbitmap("images/avion.ico")
 
     # Frame izquierdo para destinos disponibles
     frame_destinos = Frame(ventana_busqueda)
@@ -525,7 +525,7 @@ def vuelos_disponibles():
     ventana_vuelos.title("Vuelos Disponibles")
     ventana_vuelos.grab_set()
     ventana_vuelos.transient(ventana_vuelos.master)
-    ventana_vuelos.iconbitmap("avion.ico")
+    ventana_vuelos.iconbitmap("images/avion.ico")
     
     # Crear (tabla) para mostrar los vuelos
     tabla = ttk.Treeview(ventana_vuelos, columns=("Número", "Código", "Origen", "Destino", "Precio"))
@@ -578,7 +578,7 @@ def Reservar_varios_asientos_consecutivos():
     ventana.title(f"Reservar asientos consecutivos - Vuelo {num_vuelo}")
     ventana.grab_set()
     ventana.transient(ventana.master)
-    ventana.iconbitmap("avion.ico")
+    ventana.iconbitmap("images/avion.ico")
 
     Label(ventana, text="Fila:").grid(row=0, column=0, padx=8, pady=8, sticky="e")
     combo_filas = ttk.Combobox(ventana, values=filas_opciones, state="readonly", width=8)
@@ -691,7 +691,7 @@ def Simular_venta_masiva():
     ventana_res.title("Resultado simulación")
     ventana_res.grab_set()
     ventana_res.transient(ventana_res.master)
-    ventana_res.iconbitmap("avion.ico")
+    ventana_res.iconbitmap("images/avion.ico")
 
     listbox = Listbox(ventana_res, width=80)
     for linea in resultados:
@@ -728,7 +728,7 @@ def Reiniciar_vuelo():
 
 ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
-ventana.iconbitmap("avion.ico")
+ventana.iconbitmap("images/avion.ico")
 
 
 # Definir tamaño
@@ -737,7 +737,7 @@ ventana.resizable(False, False)
 ventana.update_idletasks()
 
 
-ruta_imagen = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
+ruta_imagen = "images/cielo.jpg"
 
 
 imagen = Image.open(ruta_imagen)
