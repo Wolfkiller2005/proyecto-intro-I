@@ -24,7 +24,7 @@ def mensaje_personalizado(titulo, texto, tipo="info", duracion=1500):
     ventana_msg.geometry("350x150")
     ventana_msg.resizable(False, False)
     ventana_msg.attributes("-topmost", True)
-    ventana_msg.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_msg.iconbitmap("avion.ico")
 
     try:
         ruta = r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\cielo.jpg"
@@ -63,7 +63,7 @@ def seleccionar_vuelo():
     ventana_seleccion.title("Seleccionar Vuelo")
     ventana_seleccion.grab_set()
     ventana_seleccion.transient(ventana_seleccion.master)
-    ventana_seleccion.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_seleccion.iconbitmap("images/avion.ico")
     
     Label(ventana_seleccion, text="Seleccione el número del vuelo:").pack(padx=10, pady=(10,0))
     
@@ -525,7 +525,7 @@ def vuelos_disponibles():
     ventana_vuelos.title("Vuelos Disponibles")
     ventana_vuelos.grab_set()
     ventana_vuelos.transient(ventana_vuelos.master)
-    ventana_vuelos.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_vuelos.iconbitmap("avion.ico")
     
     # Crear (tabla) para mostrar los vuelos
     tabla = ttk.Treeview(ventana_vuelos, columns=("Número", "Código", "Origen", "Destino", "Precio"))
@@ -578,7 +578,7 @@ def Reservar_varios_asientos_consecutivos():
     ventana.title(f"Reservar asientos consecutivos - Vuelo {num_vuelo}")
     ventana.grab_set()
     ventana.transient(ventana.master)
-    ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana.iconbitmap("avion.ico")
 
     Label(ventana, text="Fila:").grid(row=0, column=0, padx=8, pady=8, sticky="e")
     combo_filas = ttk.Combobox(ventana, values=filas_opciones, state="readonly", width=8)
@@ -691,7 +691,7 @@ def Simular_venta_masiva():
     ventana_res.title("Resultado simulación")
     ventana_res.grab_set()
     ventana_res.transient(ventana_res.master)
-    ventana_res.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+    ventana_res.iconbitmap("avion.ico")
 
     listbox = Listbox(ventana_res, width=80)
     for linea in resultados:
@@ -728,7 +728,7 @@ def Reiniciar_vuelo():
 
 ventana = Tk()
 ventana.title("Sistema de reserva de vuelos")
-ventana.iconbitmap(r"C:\Users\brand\OneDrive\Documentos\GitHub\proyecto-intro-I\avion.ico")
+ventana.iconbitmap("avion.ico")
 
 
 # Definir tamaño
