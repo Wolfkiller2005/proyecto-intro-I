@@ -18,7 +18,7 @@ def obtener_letra_fila(n):
         n -= 1
     return letras
 
-def mensaje_personalizado(titulo, texto, tipo="info", duracion=1500):
+def mensaje_personalizado(titulo, texto, tipo="info", duracion=2000):
     ventana_msg = Toplevel()
     ventana_msg.title(titulo)
     ventana_msg.geometry("350x150")
