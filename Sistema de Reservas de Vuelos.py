@@ -26,18 +26,16 @@ def mensaje_personalizado(titulo, texto, tipo="info", duracion=2000):
     ventana_msg.attributes("-topmost", True)
     ventana_msg.iconbitmap("images/avion.ico")
 
-    try:
-        ruta = "images/cielo.jpg"
-        img = Image.open(ruta)
-        img = img.copy()
-        img.thumbnail((400, 200), Image.LANCZOS)
-        img_tk = ImageTk.PhotoImage(img)
-
-        fondo_label = Label(ventana_msg, image=img_tk)
-        fondo_label.image = img_tk
-        fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
-    except Exception:
-        ventana_msg.configure(bg="#433859")
+    ruta = "images/cielo.jpg"
+    img = Image.open(ruta)
+    img = img.copy()
+    img.thumbnail((400, 200), Image.LANCZOS)
+    img_tk = ImageTk.PhotoImage(img)
+    
+    fondo_label = Label(ventana_msg, image=img_tk)
+    fondo_label.image = img_tk
+    fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
+    
 
     Label(
         ventana_msg,
